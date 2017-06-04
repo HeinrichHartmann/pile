@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3
-
 #
 # Document Manager
 #
@@ -12,14 +10,9 @@ import os
 import os.path
 import click
 
-def write(s):
-    sys.stdout.buffer.write((s + "\n").encode("utf-8"))
-def printj(o):
-    write(json.dumps(o))
-
 re_date = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
 re_ext = re.compile(".*?[.]([a-zA-Z]{1,3})")
-re_tag = re.compile("[#][A-Za-z]+")
+re_tag = re.compile("[#][A-Za-z0-9]+")
 re_scan_tag = re.compile("S[0-9]+")
 
 class Document:
@@ -58,7 +51,7 @@ class Document:
             raise ValueError("Path not a file")
 
         # Extract tags
-        tags = list(map(lambda x: x.lstrip('#').upper(), re_tag.findall(rest)))
+        tags = list(map(lambda x: x.lstrip('#'), re_tag.findall(rest)))
         rest = re_tag.sub("", rest)
 
         # Scan tags
@@ -72,17 +65,16 @@ class Document:
         return Document(date, tags, title, ext, path)
         
     def text(self):
-        tags = "_".join(map(lambda x: "#" + x, self.tags))
-        if len(tags) > 0:
-            tags += "_"
-        return '{}_{}{}{}'.format(self.date, tags, self.title, self.ext)
+        tags = ",".join(map(lambda x: "#" + x, self.tags))
+        return '{}|{}|{}{}'.format(self.date, tags, self.title, self.ext)
 
 import sqlite3
 class Pile():
     "A pile of managed documents"
 
-    def __init__(self):
+    def __init__(self, backing_dir):
         self.docs = []
+        self.backing_dir = backing_dir
 
     def add(self, doc):
         "Throw a doc to onto the pile"
@@ -90,7 +82,7 @@ class Pile():
         
     @staticmethod
     def from_folder(path):
-        pile = Pile()
+        pile = Pile(path)
         for p in Path(path).iterdir():
             try:
                 pile.add(Document.from_path(p))
@@ -99,34 +91,5 @@ class Pile():
         return pile
 
     def __iter__(self):
+        "iterate over documents within the pile"
         return iter(self.docs)
-        
-def cgi():
-    write("Content-Type: text/plain; charset=utf-8\n\n")
-    p = Path(".")
-    for f in p.iterdir():
-        try:
-            # write(f.name)
-            d = Document.from_path(f)
-            write(d.text())
-        except ValueError as e:
-            write(str(e))
-
-@click.group()
-def doc():
-    pass
-    
-@click.command(help="List all documents in table")
-def ls():
-    for doc in Pile.from_folder("."):
-        write(doc.text())
-    
-doc.add_command(ls)
-            
-def main():
-    if os.environ.get('GATEWAY_INTERFACE'):
-        cgi()
-    else:
-        doc()
-    
-main()
