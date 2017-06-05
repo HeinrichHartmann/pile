@@ -1,7 +1,3 @@
-#
-# Document Manager
-#
-
 import sys
 import re
 from pathlib import Path
@@ -51,7 +47,7 @@ class Document:
             raise ValueError("Path not a file")
 
         # Extract tags
-        tags = list(map(lambda x: x.lstrip('#'), re_tag.findall(rest)))
+        tags = list(re_tag.findall(rest))
         rest = re_tag.sub("", rest)
 
         # Scan tags
@@ -59,14 +55,23 @@ class Document:
         rest = re_scan_tag.sub("", rest)
 
         # Cleanup title
-        rest = rest.strip("_")
-        rest = re.sub("__", "", rest)
-        title = re.sub("_", " ", rest)
+        rest = re.sub("[_:|,]", " ", rest)
+        rest = re.sub("  +", " ", rest)
+        rest = rest.strip(" ")
+        title = rest
         return Document(date, tags, title, ext, path)
         
     def text(self):
-        tags = ",".join(map(lambda x: "#" + x, self.tags))
-        return '{}|{}|{}{}'.format(self.date, tags, self.title, self.ext)
+        tags = "".join(map(lambda x: "#" + x, self.tags))
+        return '{}:{}:{}{}'.format(self.date, tags, self.title, self.ext)
+
+    def normalize(self):
+        q = self.path.with_name(self.text())
+        self.path.rename(q)
+        self.path = q
+
+    def name(self):
+        return self.path.name
 
 import sqlite3
 class Pile():
@@ -79,7 +84,7 @@ class Pile():
     def add(self, doc):
         "Throw a doc to onto the pile"
         self.docs.append(doc)
-        
+
     @staticmethod
     def from_folder(path):
         pile = Pile(path)
@@ -89,6 +94,16 @@ class Pile():
             except ValueError as e:
                 pass
         return pile
+
+    @staticmethod
+    def leftovers(path):
+        "returns all paths that are not valid documents"
+        pile = Pile(path)
+        for p in Path(path).iterdir():
+            try:
+                pile.add(Document.from_path(p))
+            except ValueError as e:
+                yield p
 
     def __iter__(self):
         "iterate over documents within the pile"
