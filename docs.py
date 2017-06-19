@@ -9,7 +9,6 @@ import click
 re_date = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
 re_ext = re.compile(".*?[.]([a-zA-Z]{1,3})")
 re_tag = re.compile("[#][A-Za-z0-9]+")
-re_scan_tag = re.compile("S[0-9]+")
 
 class Document:
     "A managed document"
@@ -49,10 +48,6 @@ class Document:
         # Extract tags
         tags = list(re_tag.findall(rest))
         rest = re_tag.sub("", rest)
-
-        # Scan tags
-        tags.extend(re_scan_tag.findall(rest))
-        rest = re_scan_tag.sub("", rest)
 
         # Cleanup title
         rest = re.sub("[_:|,]", " ", rest)
