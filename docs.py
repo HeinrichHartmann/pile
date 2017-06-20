@@ -106,16 +106,26 @@ class Document:
     def tag_list(self):
         return self.tags
 
+    def tag_add(self, tag):
+        "Add tag to tags list"
+        if not tag in self.tags:
+            self.tags += [ tag ]
+            self.tags.sort()
+            self.normalize()
+            
     def tag_rm(self, tag):
         "remove tag from internal tag list. Need to normalize() to change file name"
-        self.tags = [ t for t in self.tags if t != tag ]
+        if tag in self.tags:
+            self.tags = [ t for t in self.tags if t != tag ]
+            self.normalize()
 
 class Pile():
     "A pile of managed documents"
 
     def __init__(self, backing_dir):
         self.docs = []
-        self.backing_dir = backing_dir
+        self.backing_dir = Path(backing_dir)
+        assert(self.backing_dir.is_dir())
 
     def __iter__(self):
         "iterate over documents within the pile"
@@ -148,16 +158,11 @@ class Pile():
     def extract(self, tag_str):
         tag = Tag(tag_str)
         "moves all documents tagged with $tag into a subfolder"
-        tagdir = Path(self.backing_dir).joinpath(str(tag))
-        try:
+        tagdir = self.backing_dir / str(tag)
+        if not tagdir.exists():
             tagdir.mkdir()
-        except FileExistsError:
-            print("Directory already exists: ", tagdir, file=sys.stderr)
 
         for doc in self:
-            if doc.has_tag(Tag(tag_str)):
-                print("found doc with tag", tag_str, ":", doc.name())
+            if doc.has_tag(tag):
                 doc.move_to_dir(tagdir)
                 doc.tag_rm(tag)
-                doc.normalize()
- 

@@ -2,7 +2,8 @@
 
 import sys
 import click
-from docs import Pile
+from pathlib import Path
+from docs import Pile, Tag
 
 def write(s):
     sys.stdout.buffer.write((s).encode("utf-8"))
@@ -59,6 +60,15 @@ doc.add_command(tags)
 def extract(tag):
     Pile.from_folder(".").extract(tag)
 doc.add_command(extract)
-    
+
+@click.command(help="Tag documents in sub directory with it's name, and move them to the pile.")
+@click.argument('directory')
+def fold(directory):
+    pile = Pile.from_folder(directory)
+    for doc in pile:
+        doc.tag_add(Tag.from_str(directory))
+        doc.move_to_dir("./")
+doc.add_command(fold)
+
 if __name__ == '__main__':
     doc()
