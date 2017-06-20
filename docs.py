@@ -8,6 +8,7 @@ import click
 
 re_date = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
 re_ext = re.compile(".*?[.]([a-zA-Z]{1,3})")
+re_kvtag = re.compile("[#]([A-Za-z0-9]+):([A-Za-z0-9]+)")
 re_tag = re.compile("[#][A-Za-z0-9]+")
 
 class Tag:
@@ -36,9 +37,10 @@ class Tag:
 class Document:
     "A managed document"
     
-    def __init__(self, date, tags, title, ext, path):
+    def __init__(self, date, tags, kvtags, title, ext, path):
         self.date = date
         self.tags = tags
+        self.kvtags = kvtags
         self.ext = ext
         self.title = title
         self.path = path
@@ -68,6 +70,10 @@ class Document:
         if not path.is_file():
             raise ValueError("Path not a file")
 
+        # Extract kv-tags
+        kvtags = dict(re_kvtag.findall(rest))
+        rest = re_kvtag.sub("", rest)
+
         # Extract tags
         tags = [ Tag.from_str(tag_str) for tag_str in re_tag.findall(rest) ]
         tags = list(set(tags))
@@ -79,13 +85,12 @@ class Document:
         rest = re.sub("  +", " ", rest)
         rest = rest.strip(" ")
         title = rest
-        return Document(date, tags, title, ext, path)
+        return Document(date, tags, kvtags, title, ext, path)
         
     def text(self):
-        tags = " ".join(map(str, self.tags))
-        if len(tags) > 0: # need additional separator
-            tags += " "
-        return '{} {}{}{}'.format(self.date, tags, self.title, self.ext)
+        tags = "".join([ str(t) + " " for t in self.tags ])
+        kvtags = "".join([ "#" + k + ":" + v  + " " for k,v in self.kvtags.items()])
+        return '{} {}{}{}{}'.format(self.date, tags, kvtags, self.title, self.ext)
 
     def normalize(self):
         q = self.path.with_name(self.text())
