@@ -47,6 +47,8 @@ class Document:
 
         # Extract tags
         tags = list(re_tag.findall(rest))
+        tags = list(set(tags))
+        tags.sort()
         rest = re_tag.sub("", rest)
 
         # Cleanup title
