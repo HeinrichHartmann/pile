@@ -10,6 +10,29 @@ re_date = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
 re_ext = re.compile(".*?[.]([a-zA-Z]{1,3})")
 re_tag = re.compile("[#][A-Za-z0-9]+")
 
+class Tag:
+    def __init__(self, val):
+        self.val = val
+
+    @staticmethod
+    def from_str(raw):
+        return Tag(raw.lstrip("#"))
+
+    def value(self):
+        return self.val
+        
+    def __str__(self):
+        return "#" + self.val
+
+    def __lt__(self, other):
+        return self.val < other.val
+
+    def __eq__(self, other):
+        return self.val == other.val
+
+    def __hash__(self):
+        return hash(self.val)
+
 class Document:
     "A managed document"
     
@@ -46,37 +69,57 @@ class Document:
             raise ValueError("Path not a file")
 
         # Extract tags
-        tags = list(re_tag.findall(rest))
+        tags = [ Tag.from_str(tag_str) for tag_str in re_tag.findall(rest) ]
         tags = list(set(tags))
         tags.sort()
         rest = re_tag.sub("", rest)
 
         # Cleanup title
-        rest = re.sub("[_:|,]", " ", rest)
+        rest = re.sub("[_,|:]", " ", rest)
         rest = re.sub("  +", " ", rest)
         rest = rest.strip(" ")
         title = rest
         return Document(date, tags, title, ext, path)
         
     def text(self):
-        tags = "".join(map(lambda x: "#" + x, self.tags))
-        return '{}:{}:{}{}'.format(self.date, tags, self.title, self.ext)
+        tags = " ".join(map(str, self.tags))
+        if len(tags) > 0: # need additional separator
+            tags += " "
+        return '{} {}{}{}'.format(self.date, tags, self.title, self.ext)
 
     def normalize(self):
         q = self.path.with_name(self.text())
         self.path.rename(q)
         self.path = q
 
+    def move_to_dir(self, target):
+        q = Path(target) / self.path.name
+        self.path.rename(q)
+        self.path = q
+
     def name(self):
         return self.path.name
 
-import sqlite3
+    def has_tag(self, tag):
+        return tag in self.tags
+
+    def tag_list(self):
+        return self.tags
+
+    def tag_rm(self, tag):
+        "remove tag from internal tag list. Need to normalize() to change file name"
+        self.tags = [ t for t in self.tags if t != tag ]
+
 class Pile():
     "A pile of managed documents"
 
     def __init__(self, backing_dir):
         self.docs = []
         self.backing_dir = backing_dir
+
+    def __iter__(self):
+        "iterate over documents within the pile"
+        return iter(self.docs)
 
     def add(self, doc):
         "Throw a doc to onto the pile"
@@ -102,6 +145,19 @@ class Pile():
             except ValueError as e:
                 yield p
 
-    def __iter__(self):
-        "iterate over documents within the pile"
-        return iter(self.docs)
+    def extract(self, tag_str):
+        tag = Tag(tag_str)
+        "moves all documents tagged with $tag into a subfolder"
+        tagdir = Path(self.backing_dir).joinpath(str(tag))
+        try:
+            tagdir.mkdir()
+        except FileExistsError:
+            print("Directory already exists: ", tagdir, file=sys.stderr)
+
+        for doc in self:
+            if doc.has_tag(Tag(tag_str)):
+                print("found doc with tag", tag_str, ":", doc.name())
+                doc.move_to_dir(tagdir)
+                doc.tag_rm(tag)
+                doc.normalize()
+ 
