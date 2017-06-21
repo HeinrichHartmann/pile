@@ -8,31 +8,17 @@ import click
 
 re_date = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
 re_ext = re.compile(".*?[.]([a-zA-Z]{1,3})")
-re_kvtag = re.compile("[#]([A-Za-z0-9]+):([A-Za-z0-9]+)")
+re_kvtag = re.compile("[#]([A-Za-z0-9]+)=([A-Za-z0-9]+)")
 re_tag = re.compile("[#][A-Za-z0-9]+")
 
-class Tag:
-    def __init__(self, val):
-        self.val = val
+def tag2str(tag):
+    return '#' + tag
 
-    @staticmethod
-    def from_str(raw):
-        return Tag(raw.lstrip("#"))
+def str2tag(s):
+    return s.lstrip("#")
 
-    def value(self):
-        return self.val
-        
-    def __str__(self):
-        return "#" + self.val
-
-    def __lt__(self, other):
-        return self.val < other.val
-
-    def __eq__(self, other):
-        return self.val == other.val
-
-    def __hash__(self):
-        return hash(self.val)
+def kvtag2str(k,v):
+    return "#" + k + "=" + v
 
 class Document:
     "A managed document"
@@ -75,7 +61,7 @@ class Document:
         rest = re_kvtag.sub("", rest)
 
         # Extract tags
-        tags = [ Tag.from_str(tag_str) for tag_str in re_tag.findall(rest) ]
+        tags = [ str2tag(tag_str) for tag_str in re_tag.findall(rest) ]
         tags = list(set(tags))
         tags.sort()
         rest = re_tag.sub("", rest)
@@ -88,8 +74,8 @@ class Document:
         return Document(date, tags, kvtags, title, ext, path)
         
     def text(self):
-        tags = "".join([ str(t) + " " for t in self.tags ])
-        kvtags = "".join([ "#" + k + ":" + v  + " " for k,v in self.kvtags.items()])
+        tags = "".join([ tag2str(t) + " " for t in self.tags ])
+        kvtags = "".join([ kvtag2str(k,v) + " " for k,v in self.kvtags.items()])
         return '{} {}{}{}{}'.format(self.date, tags, kvtags, self.title, self.ext)
 
     def normalize(self):
@@ -160,10 +146,9 @@ class Pile():
             except ValueError as e:
                 yield p
 
-    def extract(self, tag_str):
-        tag = Tag(tag_str)
+    def extract(self, tag):
         "moves all documents tagged with $tag into a subfolder"
-        tagdir = self.backing_dir / str(tag)
+        tagdir = self.backing_dir / tag2str(tag)
         if not tagdir.exists():
             tagdir.mkdir()
 

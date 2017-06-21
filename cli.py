@@ -3,7 +3,7 @@
 import sys
 import click
 from pathlib import Path
-from docs import Pile, Tag
+from docs import Pile, tag2str, str2tag, kvtag2str
 
 def write(s):
     sys.stdout.buffer.write((s).encode("utf-8"))
@@ -28,10 +28,12 @@ doc.add_command(lt)
 
 @click.command()
 def table():
-    fmt = "{:10} {:20} {} {}"
-    writeln(fmt.format("date", "tags", "title", "ext"))
+    fmt = "{:10} {:20} {:20} {} {}"
+    writeln(fmt.format("date", "tags", "kvtags", "title", "ext"))
     for doc in Pile.from_folder("."):
-        writeln(fmt.format(doc.date, ",".join(doc.tags), doc.title, doc.ext[1:]))
+        tags = ",".join(list(map(tag2str, doc.tags)))
+        kvtags = ",".join([kvtag2str(k,v) for k,v in doc.kvtags.items()])
+        writeln(fmt.format(doc.date, tags, kvtags, doc.title, doc.ext[1:]))
 doc.add_command(table)
 
 @click.command(help="normalize names of all file son the pile")
@@ -58,16 +60,17 @@ doc.add_command(tags)
 @click.command(help="extract tagged documents into a folder")
 @click.argument('tag')
 def extract(tag):
-    Pile.from_folder(".").extract(tag)
+    Pile.from_folder(".").extract(str2tag(tag))
 doc.add_command(extract)
 
-@click.command(help="Tag documents in sub directory with it's name, and move them to the pile.")
-@click.argument('directory')
-def fold(directory):
-    pile = Pile.from_folder(directory)
+@click.command(help="Tag documents in subfolder with it's name, and move them to the pile.")
+@click.argument('folder')
+def fold(folder):
+    pile = Pile.from_folder(folder)
     for doc in pile:
-        doc.tag_add(Tag.from_str(directory))
+        doc.tag_add(str2tag(folder))
         doc.move_to_dir("./")
+    Path(folder).rmdir() # remove if empty
 doc.add_command(fold)
 
 if __name__ == '__main__':
