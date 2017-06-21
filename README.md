@@ -7,8 +7,8 @@ documents:
 
 ```
 2017-04-04 #S4907 #Choir List of names.pdf
-2017-04-05 #EXCITE #S5005 Notes on Data Repositories.pdf
-2017-04-06 #ARAG #S5031 #Amount=14.2EUR Invoice.pdf
+2017-04-05 #EXCITE #S=5005 Notes on Data Repositories.pdf
+2017-04-06 #ARAG #S=5031 #Amount=14.2EUR Invoice.pdf
 ```
 
 With the following semantic fields:

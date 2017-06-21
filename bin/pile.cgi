@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 
 import sys
-from docs import Pile
+from pile import Pile
 
 def write(s):
     sys.stdout.buffer.write((s + "\n").encode("utf-8"))

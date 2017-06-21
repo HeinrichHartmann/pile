@@ -3,7 +3,7 @@
 import sys
 import click
 from pathlib import Path
-from docs import Pile, tag2str, str2tag, kvtag2str
+from pile import Pile, tag2str, str2tag, kvtag2str
 
 def write(s):
     sys.stdout.buffer.write((s).encode("utf-8"))
