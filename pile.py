@@ -12,7 +12,6 @@ import os.path
 # See, e.g. https://tex.stackexchange.com/questions/94418/os-x-umlauts-in-utf8-nfd-yield-package-inputenc-error-unicode-char-u8̈-not
 
 W = u'[A-Za-z0-9_\u0308\u006B]'
-RE_ID = re.compile(u'[#]([0-9])')
 RE_DATE = re.compile(u"(\d\d\d\d-\d\d-\d\d)(.*)")
 RE_EXT = re.compile(u".*?[.]([a-zA-Z]{1,3})")
 RE_KVTAG = re.compile(u"[#]({w}+)=({w}+)".format(w=W))
@@ -30,8 +29,7 @@ def kvtag2str(k, v):
 class Document:
     "A managed document"
 
-    def __init__(self, id, date, tags, kvtags, title, ext, path):
-        self.id = id
+    def __init__(self, date, tags, kvtags, title, ext, path):
         self.date = date
         self.tags = tags
         self.kvtags = kvtags
@@ -41,7 +39,6 @@ class Document:
 
     def todict(self):
         return {
-            "id" : self.id,
             "date" : self.date,
             "tags" : self.tag_list(),
             "kvtags" : self.kvtags,
@@ -58,13 +55,6 @@ class Document:
         # Apparently python3 pathlib paths are unicode strings, and not bytes (as in UNIX)
         # http://beets.io/blog/paths.html
         name = path.name
-
-        match = RE_ID.search(name)
-        if match:
-            id = match.group(1)
-            name = RE_ID.sub("", name)
-        else:
-            raise ValueError("No ID found in '{}'".format(name))
 
         # Split off extension
         base, ext = os.path.splitext(name)
@@ -99,12 +89,12 @@ class Document:
         rest = re.sub("  +", " ", rest)
         rest = rest.strip(" ")
         title = rest
-        return Document(id, date, tags, kvtags, title, ext, path)
+        return Document(date, tags, kvtags, title, ext, path)
 
     def text(self):
         tags = "".join([tag2str(t) + " " for t in self.tags])
         kvtags = "".join([kvtag2str(k, v) + " " for k, v in self.kvtags.items()])
-        return '{} #{} {}{}{}{}'.format(self.date, self.id, tags, kvtags, self.title, self.ext)
+        return '{} {}{}{}{}'.format(self.date, tags, kvtags, self.title, self.ext)
 
     def normalize(self):
         q = self.path.with_name(self.text())
@@ -161,7 +151,7 @@ class Pile():
             try:
                 pile.add(Document.from_path(p))
             except ValueError as e:
-                print(e)
+                pass
         return pile
 
     @staticmethod
