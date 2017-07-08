@@ -4,6 +4,7 @@ import sys
 import click
 from pathlib import Path
 from pile import Pile, tag2str, str2tag, kvtag2str
+import unicodedata
 
 def write(s):
     sys.stdout.buffer.write((s).encode("utf-8"))
@@ -28,12 +29,14 @@ doc.add_command(lt)
 
 @click.command()
 def table():
-    fmt = "{:10} {:20} {:20} {} {}"
+    fmt = "{:10} {:20} {:20} {:50} {}"
     writeln(fmt.format("date", "tags", "kvtags", "title", "ext"))
     for doc in Pile.from_folder("."):
         tags = ",".join(list(map(tag2str, doc.tags)))
-        kvtags = ",".join([kvtag2str(k,v) for k,v in doc.kvtags.items()])
-        writeln(fmt.format(doc.date, tags, kvtags, doc.title, doc.ext[1:]))
+        kvtags = ",".join([kvtag2str(k, v) for k,v in doc.kvtags.items()])
+        # Normalize unicode strings before printing in order to keep alignment
+        writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
+                                [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
 doc.add_command(table)
 
 @click.command(help="normalize names of all file son the pile")
