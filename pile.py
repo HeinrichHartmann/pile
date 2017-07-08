@@ -36,6 +36,8 @@ class Document:
         if path.name.startswith("."):
             raise ValueError("Hidden files are not allowed: " + path.name)
 
+        # Apparently python3 pathlib paths are unicode strings, and not bytes (as in UNIX)
+        # http://beets.io/blog/paths.html
         name = path.name
 
         # Split off extension
@@ -66,7 +68,7 @@ class Document:
         tags.sort()
         rest = re_tag.sub("", rest)
 
-        # Cleanup title
+        # Fetch remaining bits as title
         rest = re.sub("[_,|:]", " ", rest)
         rest = re.sub("  +", " ", rest)
         rest = rest.strip(" ")
