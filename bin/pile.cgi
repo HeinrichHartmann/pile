@@ -2,7 +2,7 @@
 
 import sys
 import json
-from pile import Pile
+from pile import Pile, Stack
 from pathlib import Path
 import os
 import urllib.parse
@@ -61,6 +61,13 @@ def action_list():
 @action("latest")
 def action_latest():
     return Pile.from_folder(".").latest()
+
+### STACK FUNCTIONS
+
+@action("stack")
+def action_stack(n=1):
+    "return list of the latest added files"
+    return Stack(".").top(int(n))
 
 ################################################################################
 

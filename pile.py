@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 import os
 import os.path
+import datetime
 
 
 # MacOSX insists in filenames being utf8, with NFD normalized
@@ -179,3 +180,29 @@ class Pile():
     def latest(self):
         self.docs.sort(key=lambda doc: doc.date)
         return self.docs[-1]
+
+
+
+def stack_annotate(path):
+    "Infer pile-metadata from the provided file"
+    return {
+        "name" : path.name,
+        "date" : datetime.datetime.fromtimestamp(os.stat(path.name).st_ctime).strftime("%Y-%m-%d"),
+    }
+
+class Stack():
+    "A stack of not yet managed documents"
+
+    def __init__(self, backing_dir):
+        self.backing_dir = Path(backing_dir)
+        assert self.backing_dir.is_dir()
+
+    def top(self, n):
+        content = list(self.backing_dir.iterdir())
+        content = filter(lambda p: not p.name.startswith("."), content)
+        # sort by creation time
+        # https://stackoverflow.com/a/168435/1209380
+        content = [ x[0] for x in sorted([(fn, os.stat(fn)) for fn in content], reverse=True, key = lambda x: x[1].st_ctime) ]
+        content = content[:n]
+        content = map(stack_annotate, content)
+        return list(content)
