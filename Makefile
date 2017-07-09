@@ -14,3 +14,4 @@ demo-cgi: install
 	# cd ~/Documents && ( pile.cgi | tail -n+2 | jq . )
 	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=env' | jq .
 	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=args&hello=1&world=2' | jq .
+	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=list' | jq .

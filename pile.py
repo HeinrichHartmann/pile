@@ -175,3 +175,7 @@ class Pile():
             if doc.has_tag(tag):
                 doc.move_to_dir(tagdir)
                 doc.tag_rm(tag)
+
+    def latest(self):
+        self.docs.sort(key=lambda doc: doc.date)
+        return self.docs[-1]

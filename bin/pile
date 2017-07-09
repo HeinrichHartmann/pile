@@ -76,5 +76,11 @@ def fold(folder):
     Path(folder).rmdir() # remove if empty
 doc.add_command(fold)
 
+@click.command()
+def latest():
+    pile = Pile.from_folder(".")
+    print(pile.latest().name())
+doc.add_command(latest)
+
 if __name__ == '__main__':
     doc()

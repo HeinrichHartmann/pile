@@ -3,6 +3,7 @@
 import sys
 import json
 from pile import Pile
+from pathlib import Path
 import os
 import urllib.parse
 
@@ -41,7 +42,7 @@ def action_dispatch():
 
     cgi_write("Content-Type: Application/json; charset=utf-8")
     cgi_write("")
-    cgi_write(json.dumps(result))
+    cgi_write(json.dumps(result, default=lambda o: o.__dict__()))
 
 ## ACTIONS #####################################################################
 
@@ -52,5 +53,15 @@ def action_env():
 @action("args")
 def action_args(**kwargs):
     return kwargs
+
+@action("list")
+def action_list():
+    return list(Pile.from_folder("."))
+
+@action("latest")
+def action_latest():
+    return Pile.from_folder(".").latest()
+
+################################################################################
 
 action_dispatch()
