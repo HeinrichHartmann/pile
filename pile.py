@@ -37,14 +37,15 @@ class Document:
         self.title = title
         self.path = path
 
-    def todict(self):
+    def __dict__(self):
         return {
             "date" : self.date,
             "tags" : self.tag_list(),
             "kvtags" : self.kvtags,
             "title" : self.title,
             "extension" : self.ext,
-            "filename" : self.path.name
+            "filename" : self.path.name,
+            "path" : self.path.resolve().as_posix(),
         }
 
     @staticmethod
