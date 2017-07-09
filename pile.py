@@ -49,32 +49,24 @@ class Document:
             "path" : self.path.resolve().as_posix(),
         }
 
+
     @staticmethod
-    def from_path(path):
-        if path.name.startswith("."):
-            raise ValueError("Hidden files are not allowed: " + path.name)
+    def parse_path(path):
+        "Returns document with parsed out valid semantic field from filename"
 
         # Apparently python3 pathlib paths are unicode strings, and not bytes (as in UNIX)
         # http://beets.io/blog/paths.html
         name = path.name
 
         # Split off extension
-        base, ext = os.path.splitext(name)
+        rest, ext = os.path.splitext(name)
 
         # Split off date
-        match = RE_DATE.match(base)
-        rest = None
+        match = RE_DATE.match(rest)
         date = None
         if match:
             date = match.group(1)
             rest = match.group(2)
-        else:
-            raise ValueError("No date field found " + name)
-
-        # Filename seems ok.
-        # Causes IO(?) Check last
-        if not path.is_file():
-            raise ValueError("Path not a file")
 
         # Extract kv-tags
         kvtags = dict(RE_KVTAG.findall(rest))
@@ -92,7 +84,31 @@ class Document:
         rest = rest.strip(" ")
         title = rest
         return Document(date, tags, kvtags, title, ext, path)
+    
+    @staticmethod
+    def create_from_path(path):
+        "Create document from correctly formatted file-name"
+        
+        if path.name.startswith("."):
+            raise ValueError("Hidden files are not allowed: " + path.name)
 
+        doc = Document.parse_path(path)
+
+        if not doc.date:
+            raise ValueError("Date field not found")
+
+        if not path.is_file():
+            raise ValueError("Path not a file")
+
+        return doc
+
+    def inferr_from_path(path):
+        "Infer as much information as possible from the file"
+        doc = Document.parse_path(path)
+        if not doc.date:
+            doc.date = datetime.datetime.fromtimestamp(os.stat(path.name).st_ctime).strftime("%Y-%m-%d")
+        return doc
+    
     def text(self):
         tags = "".join([tag2str(t) + " " for t in self.tags])
         kvtags = "".join([kvtag2str(k, v) + " " for k, v in self.kvtags.items()])
@@ -151,7 +167,7 @@ class Pile():
         pile = Pile(path)
         for p in Path(path).iterdir():
             try:
-                pile.add(Document.from_path(p))
+                pile.add(Document.create_from_path(p))
             except ValueError as e:
                 pass
         return pile
@@ -162,7 +178,7 @@ class Pile():
         pile = Pile(path)
         for p in Path(path).iterdir():
             try:
-                pile.add(Document.from_path(p))
+                pile.add(Document.create_from_path(p))
             except ValueError as e:
                 yield p
 
@@ -181,15 +197,6 @@ class Pile():
         self.docs.sort(key=lambda doc: doc.date)
         return self.docs[-1]
 
-
-
-def stack_annotate(path):
-    "Infer pile-metadata from the provided file"
-    return {
-        "name" : path.name,
-        "date" : datetime.datetime.fromtimestamp(os.stat(path.name).st_ctime).strftime("%Y-%m-%d"),
-    }
-
 class Stack():
     "A stack of not yet managed documents"
 
@@ -202,7 +209,11 @@ class Stack():
         content = filter(lambda p: not p.name.startswith("."), content)
         # sort by creation time
         # https://stackoverflow.com/a/168435/1209380
-        content = [ x[0] for x in sorted([(fn, os.stat(fn)) for fn in content], reverse=True, key = lambda x: x[1].st_ctime) ]
+        content = [ x[0] for x in sorted(
+            [(fn, os.stat(fn)) for fn in content],
+            reverse=True,
+            key = lambda x: x[1].st_ctime
+        )]
         content = content[:n]
-        content = map(stack_annotate, content)
+        content = map(Document.inferr_from_path, content)
         return list(content)
