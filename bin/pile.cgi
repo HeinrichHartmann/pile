@@ -13,7 +13,10 @@ def cgi_write(s):
     sys.stdout.buffer.write((s + "\n").encode("utf-8"))
 
 def cgi_qs():
-    return dict(urllib.parse.parse_qsl(os.environ['QUERY_STRING']))
+    if 'QUERY_STRING' in os.environ:
+        return dict(urllib.parse.parse_qsl(os.environ['QUERY_STRING']))
+    else:
+        return {}
 
 def cgi_method():
     return os.environ['REQUEST_METHOD']
@@ -30,12 +33,13 @@ def action(action):
 
 def action_dispatch():
     qs = cgi_qs()
-    action = qs['ACTION']
-    if not action:
-        raise Error("No Action parameter provided")
+    try:
+        action = qs['ACTION']
+    except KeyError:
+        raise Exception("No Action parameter provided")
     handler = _ACTIONS[action]
     if not handler:
-        raise Error("No such action: " + action)
+        raise Exception("No such action: " + action)
     qs.pop('ACTION')
 
     result = handler(**qs)

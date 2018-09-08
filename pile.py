@@ -6,13 +6,12 @@ import os
 import os.path
 import datetime
 
-
 # MacOSX insists in filenames being utf8, with NFD normalized
 # This means umlauts are represented as two unicode points : (1) LATIN SMALL LETTER ? (2) WITH COMBINING DIAERESIS
 # We explicitly include the latter unicode point
 # See, e.g. https://tex.stackexchange.com/questions/94418/os-x-umlauts-in-utf8-nfd-yield-package-inputenc-error-unicode-char-u8̈-not
 
-W = u'[A-Za-z0-9_\u0308\u006B]'
+W = u'[A-Za-z0-9,._\u0308\u006B]'
 RE_DATE = re.compile(u"(\d\d\d\d-\d\d-\d\d)(.*)")
 RE_EXT = re.compile(u".*?[.]([a-zA-Z]{1,3})")
 RE_KVTAG = re.compile(u"[#]({w}+)=({w}+)".format(w=W))
@@ -84,11 +83,11 @@ class Document:
         rest = rest.strip(" ")
         title = rest
         return Document(date, tags, kvtags, title, ext, path)
-    
+
     @staticmethod
     def create_from_path(path):
         "Create document from correctly formatted file-name"
-        
+
         if path.name.startswith("."):
             raise ValueError("Hidden files are not allowed: " + path.name)
 
@@ -108,10 +107,10 @@ class Document:
         if not doc.date:
             doc.date = datetime.datetime.fromtimestamp(os.stat(path.name).st_ctime).strftime("%Y-%m-%d")
         return doc
-    
+
     def text(self):
-        tags = "".join([tag2str(t) + " " for t in self.tags])
-        kvtags = "".join([kvtag2str(k, v) + " " for k, v in self.kvtags.items()])
+        tags = "".join([tag2str(t) + " " for t in sorted(self.tags)])
+        kvtags = "".join([kvtag2str(k, self.kvtags[k]) + " " for k in sorted(self.kvtags)])
         return '{} {}{}{}{}'.format(self.date, tags, kvtags, self.title, self.ext)
 
     def normalize(self):
