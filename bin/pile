@@ -2,6 +2,7 @@
 
 import sys
 import click
+import json
 from pathlib import Path
 from pile import Pile, tag2str, str2tag, kvtag2str
 import unicodedata
@@ -14,7 +15,7 @@ def writeln(s):
 @click.group()
 def doc():
     pass
-    
+
 @click.command(help="List all valid documents in pile")
 def ls():
     for doc in Pile.from_folder("."):
@@ -28,6 +29,18 @@ def lt():
 doc.add_command(lt)
 
 @click.command()
+def totsv():
+    fmt = "{}\t{}\t{}\t{}\t{}"
+    writeln(fmt.format("date", "tags", "kvtags", "title", "ext"))
+    for doc in Pile.from_folder("."):
+        tags = ",".join(list(map(tag2str, doc.tags)))
+        kvtags = ",".join([kvtag2str(k, v) for k,v in doc.kvtags.items()])
+        # Normalize unicode strings before printing in order to keep alignment
+        writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
+                                [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
+doc.add_command(totsv)
+
+@click.command()
 def table():
     fmt = "{:10} {:20} {:20} {:50} {}"
     writeln(fmt.format("date", "tags", "kvtags", "title", "ext"))
@@ -38,6 +51,12 @@ def table():
         writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
                                 [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
 doc.add_command(table)
+
+@click.command(help="export documents as json")
+def tojson():
+    for doc in Pile.from_folder("."):
+        writeln(json.dumps(doc.__dict__()))
+doc.add_command(tojson)
 
 @click.command(help="normalize names of all file son the pile")
 @click.option("--dry-run","-n",help="dry run", is_flag=True)
