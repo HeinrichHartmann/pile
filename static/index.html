@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/jquery-3.4.1.min.js"></script>
+    <script src="/static/d3.min.js"></script>
+    <script src="/js/app.js"></script>
+    <style>
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <div id="left">
+        <input type="search" id="filter" placeholder="Filter" autofocus="autofocus">
+        <table id="table">
+          <thead>
+            <tr>
+              <th width="80px">Date</th>
+              <th width="120px">Tags</th>
+              <th>Name</th>
+              <th width="60px">ext</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div id="right" class="preview">
+        <div id="title"><h1></h1></div>
+        <img id="preview_img"></img>
+        <pre id="preview_pre"></pre>
+        <iframe id="preview_iframe"></iframe>
+        <div id="no_preview">no preview</div>
+      </div>
+    </div>
+  </body>
+</html>

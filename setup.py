@@ -17,4 +17,5 @@ setup(
     py_modules = ['pile'],
     long_description=read('README.md'),
     scripts = ['bin/pile'],
+    install_requires = [ "click" ],
 )

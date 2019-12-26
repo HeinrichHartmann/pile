@@ -48,7 +48,6 @@ class Document:
             "path" : self.path.resolve().as_posix(),
         }
 
-
     @staticmethod
     def parse_path(path):
         "Returns document with parsed out valid semantic field from filename"
@@ -88,6 +87,9 @@ class Document:
     def create_from_path(path):
         "Create document from correctly formatted file-name"
 
+        if not path.is_file():
+            raise ValueError("Path not a file")
+
         if path.name.startswith("."):
             raise ValueError("Hidden files are not allowed: " + path.name)
 
@@ -95,10 +97,6 @@ class Document:
 
         if not doc.date:
             raise ValueError("Date field not found")
-
-        if not path.is_file():
-            raise ValueError("Path not a file")
-
         return doc
 
     def inferr_from_path(path):
@@ -162,13 +160,20 @@ class Pile():
         self.docs.append(doc)
 
     @staticmethod
-    def from_folder(path):
-        pile = Pile(path)
-        for p in Path(path).iterdir():
-            try:
-                pile.add(Document.create_from_path(p))
-            except ValueError as e:
-                pass
+    def from_folder(dirpath, recurse=False):
+        pile = Pile(dirpath)
+        def _rec(dirpath, tags):
+            for p in Path(dirpath).iterdir():
+                if recurse and p.is_dir():
+                    _rec(p, tags + [p.name])
+                else:
+                    try:
+                        d = Document.create_from_path(p)
+                        d.tags += tags
+                        pile.add(d)
+                    except ValueError as e:
+                        pass
+        _rec(dirpath, [])
         return pile
 
     @staticmethod
@@ -195,6 +200,10 @@ class Pile():
     def latest(self):
         self.docs.sort(key=lambda doc: doc.date)
         return self.docs[-1]
+
+    def list(self):
+        self.docs.sort(key=lambda doc: doc.date, reverse=False)
+        return [ doc.__dict__() for doc in  self.docs ]
 
 class Stack():
     "A stack of not yet managed documents"

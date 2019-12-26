@@ -11,6 +11,8 @@ def write(s):
     sys.stdout.buffer.write((s).encode("utf-8"))
 def writeln(s):
     write(s + "\n")
+def warn(s):
+    sys.stderr.buffer.write((s + '\n').encode("utf-8"))
 
 @click.group()
 def doc():
@@ -51,6 +53,26 @@ def table():
         writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
                                 [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
 doc.add_command(table)
+
+@click.command()
+@click.option("--recurse","-r",help="Descend into subdirectories", is_flag=True)
+def invoice_table(recurse):
+    fmt = "{}\t{}\t{}\t{}\t{}"
+    writeln(fmt.format("date", "title", "tags", "AMOUNT", "CUR"))
+    for doc in Pile.from_folder(".", recurse=recurse):
+        kvtags = doc.kvtags;
+        if not "AMOUNT" in kvtags:
+            warn("Skipping " + doc.path.name)
+            continue
+        amount = kvtags.pop("AMOUNT")
+        cur    = kvtags.pop("CUR", "EUR")
+        s_tags = ",".join(list(map(tag2str, doc.tags)) +
+                          [kvtag2str(k, v) for k,v in doc.kvtags.items()])
+        # Normalize unicode strings before printing in order to keep alignment
+        writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
+                                [doc.date, doc.title, s_tags, amount, cur])))
+doc.add_command(invoice_table)
+
 
 @click.command(help="export documents as json")
 def tojson():

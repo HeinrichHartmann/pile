@@ -1,3 +1,14 @@
+PWD=$(shell pwd)
+PYTHON=source venv/bin/activate; PYTHONPATH=$(PWD) python
+
+run:
+	$(PYTHON) bin/piled
+
+venv:
+	$(PYTHON) -m pip install --upgrade pip setuptools wheel
+	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) setup.py install
+
 install:
 	python3 setup.py install
 
