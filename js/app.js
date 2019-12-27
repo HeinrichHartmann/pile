@@ -36,7 +36,17 @@ function download() {
   link.click();
 }
 
+var preview_job = false;
 function preview(rec) {
+  if (preview_job) {
+    clearTimeout(preview_job);
+  }
+  preview_job = setTimeout(() => {
+    do_preview(rec);
+  }, 100);
+}
+
+function do_preview(rec) {
   url = "/doc/" + encodeURIComponent(rec.filename);
   if ( EXT_IFRAME.includes(rec.extension) ) {
     $("#no_preview").css("display", "none");
