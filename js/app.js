@@ -1,16 +1,6 @@
-function setClipboard(value) {
-  var tempInput = document.createElement("input");
-  tempInput.style = "position: absolute; left: -1000px; top: -1000px";
-  tempInput.value = value;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  document.execCommand("copy");
-  document.body.removeChild(tempInput);
-}
-
-var recs = [];
-var crec = 0;
-var selected = [];
+//
+// Debug Helper
+//
 
 function P(s, t, u) {
   console.log(s, t, u);
@@ -22,27 +12,31 @@ function mod(a, n) {
   return x;
 }
 
-function select_clear() {
-  selected.forEach((sel) => { sel.toggleClass("selected", false) });
-  selected = [];
+
+//
+// Helper
+//
+
+function setClipboard(value) {
+  var tempInput = document.createElement("input");
+  tempInput.style = "position: absolute; left: -1000px; top: -1000px";
+  tempInput.value = value;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  document.execCommand("copy");
+  document.body.removeChild(tempInput);
 }
 
-EXT_IFRAME = [ ".pdf" ]
-EXT_IMG  = [ ".png" ]
-EXT_PRE  = [ ".txt", ".md" ]
+function download() {
+  var link = document.createElement("a");
+  cname = recs[crec].filename;
+  path = "/doc/" + encodeURIComponent(cname);
+  link.download = cname;
+  link.href = path;
+  link.click();
+}
 
-function select(n) {
-  crec = mod(n, recs.length);
-  rec = recs[crec]
-
-  select_clear();
-  selected.push(
-    $(rec.row).toggleClass("selected", true)
-  );
-  rec.row.scrollIntoViewIfNeeded({block: "start", inline: "nearest"});
-
-  $("#title h1").text(rec.filename);
-
+function preview(rec) {
   url = "/doc/" + encodeURIComponent(rec.filename);
   if ( EXT_IFRAME.includes(rec.extension) ) {
     $("#no_preview").css("display", "none");
@@ -74,7 +68,61 @@ function select(n) {
     $("#preview_pre").css("display", "none");
     $("#no_preview").css("display", "flex");
   }
+}
+
+//
+// Selection Logic
+//
+
+const EXT_IFRAME = [ ".pdf" ]
+const EXT_IMG  = [ ".png" ]
+const EXT_PRE  = [ ".txt", ".md" ]
+
+var recs = [];
+var crec = false;
+
+function select(n) {
+  if (crec == n) { return; }
+  crec = n
+  rec = recs[n];
+  if (!rec) { return; }
+
+  P("select", n, rec)
+
+  // clear selection
+  recs.forEach( rec => { rec.selected = false; })
+  rec.selected = true;
+
+  rec.dom_element.scrollIntoViewIfNeeded({block: "start", inline: "nearest"});
+
+  $("#title h1").text(rec.filename);
   setClipboard(rec.filename);
+
+  preview(rec);
+
+  update_table();
+}
+
+function select_next() {
+  var n = crec + 1;
+  if (n < recs.length) {
+    while(recs[n].hidden && n < recs.length) { n++; }
+    select(n);
+  }
+  else {
+    ping();
+  }
+}
+
+function select_prev() {
+  var n = crec - 1;
+  if (n >= 0) {
+    while(recs[n].hidden && n > 0 ) { n--; }
+    select(n);
+  }
+  else {
+    ping();
+  }
 }
 
 function ping() {
@@ -85,66 +133,89 @@ function ping() {
   }, 200);
 }
 
-function select_next() {
-  if (crec > 0) {
-    select(crec - 1);
-  }
-  else {
-    ping();
-  }
+function update_table() {
+
+  var t = d3.transition()
+      .duration(350)
+      .ease(d3.easeLinear);
+
+  var visible_recs = recs.filter(rec => !rec.hidden)
+  var tr = d3.select("#table tbody")
+    .selectAll("tr")
+    .data(visible_recs, function(rec) { return rec ? rec.n : this.rec.n });
+
+  tr.exit()
+    .transition(t)
+    .style("color", "#FFF")
+    .remove()
+
+  tr.enter()
+    .append("tr")
+    .each(function(rec, n) {
+        this.rec = rec;
+        rec.dom_element = this;
+      })
+    .on("click", function(d,i) { select(i) })
+    .selectAll("td")
+    .data(function(rec) { return rec.row })
+    .enter()
+      .append("td")
+    .text(d => { return d })
+    .style("color", "#FFF")
+    .transition(t)
+    .style("color", "#000")
+
+  tr.each(function(rec) {
+    $(this).toggleClass("selected", rec.selected);
+  });
+
+
 }
 
-function select_prev() {
-  if (crec < recs.length - 1) {
-    select(crec + 1);
-  }
-  else {
-    ping();
-  }
-}
-
-function download() {
-  var link = document.createElement("a");
-  cname = recs[crec].filename;
-  path = "/doc/" + encodeURIComponent(cname);
-  link.download = cname;
-  link.href = path;
-  link.click();
+function filter(event) {
+  const pattern = event.currentTarget.value.replace(/ +/g, ' ').toLowerCase();
+  recs.forEach((rec, i) => {
+    var text = $(rec.dom_element).text().replace(/\s+/g, ' ').toLowerCase();
+    if (!~text.indexOf(pattern)) {
+      rec.hidden = true
+      // rec.dom_element.hidden = true;
+    } else {
+      rec.hidden = false
+      // rec.dom_element.hidden = false;
+    }
+  });
 }
 
 function main() {
-  $.get("/list", function(data, status){
-    var table = $("#table")[0];
-    data.forEach(function(rec) {
-      recs.push(rec);
-      const tag_str = [].concat(
+  $.get("/list", (data, status) => {
+    data.forEach((rec, n) => {
+      rec.n = n;
+      rec.hidden = false;
+      rec.tag_str = [].concat(
         rec.tags.map(function(x) {return "#" + x; }),
         Object.keys(rec.kvtags).map(function(x) { return "#" + x + "=" + rec.kvtags[x]; })
       ).join(", ");
-      const row = table.tBodies[0].insertRow(0);
-      row.insertCell(0).innerText = rec.date;
-      row.insertCell(1).innerText = tag_str;
-      row.insertCell(2).innerText = rec.title;
-      row.insertCell(3).innerText = rec.extension;
-      rec.row = row;
-      rec.n = recs.length;
-      row.rec = rec;
+      rec.row = [
+        rec.date,
+        rec.tag_str,
+        rec.title,
+        rec.extension
+      ]
+      recs.push(rec);
     });
 
-    $("#table tr").click(function(event) {
-      select(this.rec.n);
-    });
+    update_table();
 
-    const rows = $('#table tbody tr');
-    $('#filter').keyup(function() {
-      var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-      rows.show().filter(function() {
-        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-        return !~text.indexOf(val);
-      }).hide();
-    });
-    select(recs.length - 1);
+    select(0);
   });
+
+  $('#filter').keyup(
+    (event) => {
+      filter(event);
+      update_table();
+      select(0);
+      event.currentTarget.focus();
+    });
 
   var f_toggle = true;
   $(document).keydown(function(e){
@@ -169,7 +240,6 @@ function main() {
       download();
     }
   });
-
 
 };
 

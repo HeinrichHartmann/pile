@@ -202,7 +202,7 @@ class Pile():
         return self.docs[-1]
 
     def list(self):
-        self.docs.sort(key=lambda doc: doc.date, reverse=False)
+        self.docs.sort(key=lambda doc: doc.date, reverse=True)
         return [ doc.__dict__() for doc in  self.docs ]
 
 class Stack():
