@@ -92,18 +92,16 @@ var recs = [];
 var crec = false;
 
 function select(n) {
-  if (crec == n) { return; }
+  if (crec === n) { return; }
   crec = n
   rec = recs[n];
-  if (!rec) { return; }
+  console.assert(rec);
 
   P("select", n, rec)
 
-  // clear selection
-  recs.forEach( rec => { rec.selected = false; })
-  rec.selected = true;
-
-  rec.dom_element.scrollIntoViewIfNeeded({block: "start", inline: "nearest"});
+  if (rec.dom_element) {
+    rec.dom_element.scrollIntoViewIfNeeded({block: "start", inline: "nearest"});
+  }
 
   $("#title h1").text(rec.filename);
   setClipboard(rec.filename);
@@ -113,25 +111,28 @@ function select(n) {
   update_table();
 }
 
+function select_first() {
+  crec = 0;
+  select_next();
+}
+
 function select_next() {
   var n = crec + 1;
-  if (n < recs.length) {
-    while(recs[n].hidden && n < recs.length) { n++; }
-    select(n);
-  }
-  else {
+  while(n < recs.length && recs[n].hidden) { n++; }
+  if (n >= recs.length || (n == recs.length && recs[n].hidden)) {
     ping();
+  } else {
+    select(n);
   }
 }
 
 function select_prev() {
   var n = crec - 1;
-  if (n >= 0) {
-    while(recs[n].hidden && n > 0 ) { n--; }
-    select(n);
-  }
-  else {
+  while(n > 0 && recs[n].hidden) { n--; }
+  if (n < 0 || (n == 0 && recs[n].hidden)) {
     ping();
+  } else {
+    select(n);
   }
 }
 
@@ -146,13 +147,16 @@ function ping() {
 function update_table() {
 
   var t = d3.transition()
-      .duration(350)
+      .duration(150)
       .ease(d3.easeLinear);
 
   var visible_recs = recs.filter(rec => !rec.hidden)
+
   var tr = d3.select("#table tbody")
     .selectAll("tr")
-    .data(visible_recs, function(rec) { return rec ? rec.n : this.rec.n });
+      .data(visible_recs, function(rec) {
+        return rec ? rec.n : this.rec.n
+      });
 
   tr.exit()
     .transition(t)
@@ -176,9 +180,8 @@ function update_table() {
     .style("color", "#000")
 
   tr.each(function(rec) {
-    $(this).toggleClass("selected", rec.selected);
+    $(this).toggleClass("selected", rec.n == crec);
   });
-
 
 }
 
@@ -188,10 +191,8 @@ function filter(event) {
     var text = $(rec.dom_element).text().replace(/\s+/g, ' ').toLowerCase();
     if (!~text.indexOf(pattern)) {
       rec.hidden = true
-      // rec.dom_element.hidden = true;
     } else {
       rec.hidden = false
-      // rec.dom_element.hidden = false;
     }
   });
 }
@@ -201,6 +202,7 @@ function main() {
     data.forEach((rec, n) => {
       rec.n = n;
       rec.hidden = false;
+      rec.selected = false;
       rec.tag_str = [].concat(
         rec.tags.map(function(x) {return "#" + x; }),
         Object.keys(rec.kvtags).map(function(x) { return "#" + x + "=" + rec.kvtags[x]; })
@@ -214,17 +216,18 @@ function main() {
       recs.push(rec);
     });
 
+    select_first();
+
     update_table();
 
-    select(0);
   });
 
   $('#filter').keyup(
     (event) => {
       filter(event);
-      update_table();
-      select(0);
+      select_first();
       event.currentTarget.focus();
+      update_table();
     });
 
   var f_toggle = true;
