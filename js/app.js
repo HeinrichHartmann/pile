@@ -144,6 +144,26 @@ function ping() {
   }, 200);
 }
 
+//
+// Instant Filter
+//
+
+function filter(event) {
+  const pattern = event.currentTarget.value.replace(/ +/g, ' ').toLowerCase();
+  recs.forEach((rec, i) => {
+    var text = $(rec.dom_element).text().replace(/\s+/g, ' ').toLowerCase();
+    if (!~text.indexOf(pattern)) {
+      rec.hidden = true
+    } else {
+      rec.hidden = false
+    }
+  });
+}
+
+//
+// Data Join
+//
+
 function update_table() {
 
   var t = d3.transition()
@@ -183,18 +203,6 @@ function update_table() {
     $(this).toggleClass("selected", rec.n == crec);
   });
 
-}
-
-function filter(event) {
-  const pattern = event.currentTarget.value.replace(/ +/g, ' ').toLowerCase();
-  recs.forEach((rec, i) => {
-    var text = $(rec.dom_element).text().replace(/\s+/g, ' ').toLowerCase();
-    if (!~text.indexOf(pattern)) {
-      rec.hidden = true
-    } else {
-      rec.hidden = false
-    }
-  });
 }
 
 function main() {
