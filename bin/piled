@@ -13,30 +13,22 @@ from aiohttp import web
 app = web.Application()
 path = Path("~/Documents").expanduser()
 
-async def handle(request):
-    text = "Hello, " + name
-    return web.Response(text=text)
+async def handle_docs(request):
+    return web.FileResponse("./static/docs.html")
 
-async def handle_list(request):
-    pile = Pile.from_folder(path)
-    return web.json_response(pile.list())
-
-async def index(request):
-    return web.FileResponse("./static/index.html")
-
-async def docs(request):
+async def handle_dfile(request):
     name = unquote(request.match_info.get('name', ""))
     return web.FileResponse(path.joinpath(name))
 
-app.add_routes([
-    web.get('/', index),
-    web.get('/app', handle)
-])
+async def handle_app_list(request):
+    pile = Pile.from_folder(path)
+    return web.json_response(pile.list())
 
-app.router.add_get("/", index)
-app.router.add_get("/app", handle)
-app.router.add_get("/list", handle_list)
-app.router.add_get("/doc/{name}", docs)
+app.router.add_get("/", handle_docs)
+app.router.add_get("/dfile/{name}", handle_dfile)
+
+app.router.add_get("/app/list", handle_app_list)
+
 app.router.add_static("/static", "./static", show_index=True)
 app.router.add_static("/js", "./js", show_index=True)
 

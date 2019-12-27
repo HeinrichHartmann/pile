@@ -30,7 +30,7 @@ function setClipboard(value) {
 function download() {
   var link = document.createElement("a");
   cname = recs[crec].filename;
-  path = "/doc/" + encodeURIComponent(cname);
+  path = "/dfile/" + encodeURIComponent(cname);
   link.download = cname;
   link.href = path;
   link.click();
@@ -47,7 +47,7 @@ function preview(rec) {
 }
 
 function do_preview(rec) {
-  url = "/doc/" + encodeURIComponent(rec.filename);
+  url = "/dfile/" + encodeURIComponent(rec.filename);
   if ( EXT_IFRAME.includes(rec.extension) ) {
     $("#no_preview").css("display", "none");
     $("#preview_img").css("display", "none");
@@ -206,7 +206,7 @@ function update_table() {
 }
 
 function main() {
-  $.get("/list", (data, status) => {
+  $.get("/app/list", (data, status) => {
     data.forEach((rec, n) => {
       rec.n = n;
       rec.hidden = false;
