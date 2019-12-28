@@ -4,30 +4,46 @@ import asyncio
 import aiohttp
 
 from urllib.parse import unquote
-from pile import Pile
+from pile import Pile, Stack
 from pathlib import Path
 import json
 
 from aiohttp import web
 
 app = web.Application()
-path = Path("~/Documents").expanduser()
+path_docs = Path("~/Documents").expanduser()
+path_pile = Path("~/Pile").expanduser()
 
 async def handle_docs(request):
     return web.FileResponse("./static/docs.html")
 
 async def handle_dfile(request):
     name = unquote(request.match_info.get('name', ""))
-    return web.FileResponse(path.joinpath(name))
+    return web.FileResponse(path_docs.joinpath(name))
+
+async def handle_pile(request):
+    return web.FileResponse("./static/pile.html")
+
+async def handle_pfile(request):
+    name = unquote(request.match_info.get('name', ""))
+    return web.FileResponse(path_pile.joinpath(name))
 
 async def handle_app_list(request):
-    pile = Pile.from_folder(path)
+    pile = Pile.from_folder(path_docs)
     return web.json_response(pile.list())
+
+async def handle_app_last(request):
+    stack = Stack(path_pile)
+    return web.json_response(stack.last())
 
 app.router.add_get("/", handle_docs)
 app.router.add_get("/dfile/{name}", handle_dfile)
 
+app.router.add_get("/pile", handle_pile)
+app.router.add_get("/pfile/{name}", handle_pfile)
+
 app.router.add_get("/app/list", handle_app_list)
+app.router.add_get("/app/last", handle_app_last)
 
 app.router.add_static("/static", "./static", show_index=True)
 app.router.add_static("/js", "./js", show_index=True)

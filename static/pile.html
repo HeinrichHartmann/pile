@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/jquery-3.4.1.min.js"></script>
+    <script src="/static/d3.min.js"></script>
+    <script src="/js/pile.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/site.css"/>
+  </head>
+  <body>
+    <div id="content">
+      <div id="left" class="preview">
+        <div id="title"><h1></h1></div>
+        <img id="preview_img"></img>
+        <pre id="preview_pre"></pre>
+        <iframe id="preview_iframe"></iframe>
+        <div id="no_preview">no preview</div>
+      </div>
+      <div id="right">
+        <form id="form" action="#">
+          <h2>Meta</h2>
+          <ul>
+            <li>
+              <label for="name">Date:</label>
+              <input type="text" id="f_date" name="date">
+            </li>
+            <li>
+              <label for="mail">Tags:</label>
+              <input type="text" id="f_tags" name="tags">
+            </li>
+            <li>
+              <label for="msg">Name:</label>
+              <input type="text" id="f_name" name="name">
+            </li>
+          </ul>
+          <h2>Filename Preview</h2>
+          <pre id="f_preview"></pre>
+          <h2>Targets</h2>
+          <table id="f_targets">
+            <tbody></tbody>
+          </table>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

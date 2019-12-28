@@ -103,7 +103,9 @@ class Document:
         "Infer as much information as possible from the file"
         doc = Document.parse_path(path)
         if not doc.date:
-            doc.date = datetime.datetime.fromtimestamp(os.stat(path.name).st_ctime).strftime("%Y-%m-%d")
+            doc.date = datetime.datetime.fromtimestamp(
+                path.stat().st_ctime
+            ).strftime("%Y-%m-%d")
         return doc
 
     def text(self):
@@ -225,3 +227,11 @@ class Stack():
         content = content[:n]
         content = map(Document.inferr_from_path, content)
         return list(content)
+
+    def last(self):
+        content = self.top(1)
+        doc = content[0]
+        if doc:
+            return doc.__dict__()
+        else:
+            return None
