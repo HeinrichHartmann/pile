@@ -112,3 +112,38 @@ th {
 #title h1 {
   font-size: 1em;
 }
+
+.target_button {
+  float: left;
+  width: 120px;
+  margin: 10px;
+}
+
+#form .f_label {
+  width: 80px;
+  text-align: center;
+}
+
+#form table td {
+  // height: 3em;
+  padding: 10px;
+}
+
+#form table tr {
+  background : #FFF;
+}
+
+#form table input {
+  width: 100%
+}
+
+#form h2 {
+  clear: both;
+}
+
+#log {
+  width: 100%;
+  clear: both;
+  background: #91b6c62b;
+  padding: 20px;
+}

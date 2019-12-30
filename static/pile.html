@@ -18,26 +18,26 @@
       <div id="right">
         <form id="form" action="#">
           <h2>Meta</h2>
-          <ul>
-            <li>
-              <label for="name">Date:</label>
-              <input type="text" id="f_date" name="date">
-            </li>
-            <li>
-              <label for="mail">Tags:</label>
-              <input type="text" id="f_tags" name="tags">
-            </li>
-            <li>
-              <label for="msg">Name:</label>
-              <input type="text" id="f_name" name="name">
-            </li>
-          </ul>
-          <h2>Filename Preview</h2>
-          <pre id="f_preview"></pre>
-          <h2>Targets</h2>
-          <table id="f_targets">
-            <tbody></tbody>
+          <table>
+            <tbody>
+              <tr>
+                <td class="f_label">Date</td>
+                <td><input id="f_date" type="text" name="date"></td>
+              </tr>
+              <tr>
+                <td class="f_label">Tags</td>
+                <td><input id="f_tags" type="text" name="tags"></td>
+              </tr>
+              <tr>
+                <td class="f_label">Title</td>
+                <td><input id="f_title" type="text" name="name"></td>
+              </tr>
+            </tbody>
           </table>
+          <h2>Targets</h2>
+          <div id="f_targets"></div>
+          <h2>Log</h2>
+          <pre id="log"></pre>
         </form>
       </div>
     </div>

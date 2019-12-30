@@ -37,7 +37,7 @@ class Document:
         self.title = title
         self.path = path
 
-    def __dict__(self):
+    def as_dict(self):
         return {
             "date" : self.date,
             "tags" : self.tag_list(),
@@ -47,6 +47,12 @@ class Document:
             "filename" : self.path.name,
             "path" : self.path.resolve().as_posix(),
         }
+
+    def update(self, data):
+        print("update", self, data)
+        for key in [  "date", "tags", "kvtags", "title", "ext" ]:
+            if key in data:
+                setattr(self, key, data[key])
 
     @staticmethod
     def parse_path(path):
@@ -119,7 +125,7 @@ class Document:
         self.path = q
 
     def move_to_dir(self, target):
-        q = Path(target) / self.path.name
+        q = Path(target).expanduser() / self.path.name
         self.path.rename(q)
         self.path = q
 
@@ -144,6 +150,9 @@ class Document:
         if tag in self.tags:
             self.tags = [t for t in self.tags if t != tag]
             self.normalize()
+
+    def get_path(self):
+        return self.path.as_posix()
 
 class Pile():
     "A pile of managed documents"
@@ -205,7 +214,7 @@ class Pile():
 
     def list(self):
         self.docs.sort(key=lambda doc: doc.date, reverse=True)
-        return [ doc.__dict__() for doc in  self.docs ]
+        return [ doc.as_dict() for doc in  self.docs ]
 
 class Stack():
     "A stack of not yet managed documents"
@@ -228,10 +237,10 @@ class Stack():
         content = map(Document.inferr_from_path, content)
         return list(content)
 
+    def is_empty(self):
+        if next(self.backing_dir.iterdir(), None)  == None:
+            return True
+        return False
+
     def last(self):
-        content = self.top(1)
-        doc = content[0]
-        if doc:
-            return doc.__dict__()
-        else:
-            return None
+        return self.top(1)[0]

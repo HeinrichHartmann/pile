@@ -34,7 +34,24 @@ async def handle_app_list(request):
 
 async def handle_app_last(request):
     stack = Stack(path_pile)
-    return web.json_response(stack.last())
+    if stack.is_empty():
+        return web.json_response({})
+    else:
+        return web.json_response(stack.last().as_dict())
+
+async def handle_app_refile(request):
+    data = await request.json()
+    source_filename = data['source']
+    target = data['target']
+    meta = data['meta']
+    stack = Stack(path_pile)
+    assert(not stack.is_empty())
+    doc = stack.last()
+    assert(doc.name() == source_filename)
+    doc.update(meta)
+    doc.normalize()
+    doc.move_to_dir(target)
+    return web.json_response({ "path" : doc.get_path() })
 
 app.router.add_get("/", handle_docs)
 app.router.add_get("/dfile/{name}", handle_dfile)
@@ -44,6 +61,7 @@ app.router.add_get("/pfile/{name}", handle_pfile)
 
 app.router.add_get("/app/list", handle_app_list)
 app.router.add_get("/app/last", handle_app_last)
+app.router.add_post("/app/refile", handle_app_refile)
 
 app.router.add_static("/static", "./static", show_index=True)
 app.router.add_static("/js", "./js", show_index=True)
