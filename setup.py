@@ -16,6 +16,6 @@ setup(
     packages=[],
     py_modules = ['pile'],
     long_description=read('README.md'),
-    scripts = ['bin/pile'],
-    install_requires = [ "click" ],
+    scripts = ['bin/pile', 'bin/piled'],
+    install_requires = [ "click", "aiohttp" ],
 )

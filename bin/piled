@@ -1,18 +1,18 @@
 # -*- python -*-
 
 import asyncio
-import aiohttp
-
+from aiohttp import web
 from urllib.parse import unquote
-from pile import Pile, Stack
 from pathlib import Path
 import json
+import argparse
 
-from aiohttp import web
+from pile import Pile, Stack
 
 app = web.Application()
 path_docs = Path("~/Documents").expanduser()
 path_pile = Path("~/Pile").expanduser()
+path_log = Path("~/var/log").expanduser()
 
 async def handle_docs(request):
     return web.FileResponse("./static/docs.html")
@@ -67,4 +67,14 @@ app.router.add_static("/static", "./static", show_index=True)
 app.router.add_static("/js", "./js", show_index=True)
 
 if __name__ == '__main__':
-    web.run_app(app)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', default=33882, type=int)
+    parser.add_argument('-d', '--daemon', default=False, action="store_true")
+    args = parser.parse_args()
+    if args.daemon:
+        import sys
+        sys.stderr = open(path_log.joinpath('piled.err'), 'a')
+        sys.stdout = open(path_log.joinpath('piled.out'), 'a')
+    print(args)
+    print(path_docs, path_pile)
+    web.run_app(app, port = args.port)
