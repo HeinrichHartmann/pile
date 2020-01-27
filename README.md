@@ -1,32 +1,50 @@
 # pile
 
+Semantics File Names for Document Management
 
-XXX
+Pile provides a set of tools, that allow you to work files that follow some human-readable
+conventions, that add semantic structure into file names. Example:
 
-A document management tool.
-
-Pile allows to transform a rather unstructured folder of files into a nicely organized pile of
-documents:
 
 ```
-2017-04-04 #S4907 #Choir List of names.pdf
-2017-04-05 #EXCITE #S=5005 Notes on Data Repositories.pdf
-2017-04-06 #ARAG #S=5031 #Amount=14.2EUR Invoice.pdf
+2017-04-04 #MChoic Member List 2017.xls
+2017-04-04 #Finanzamt (Steuernummer . 1231012393).pdf
+2017-04-05 #EXCITE Notes on Data Repositories (Author . Max Mustermann).pdf
+2017-04-06 #ARAG #Invoive 14.2EUR.pdf
+2017-02-24 Pictures Hochzeit Max+Maria Mustermann.tar.gz
 ```
 
-With the following semantic fields:
+The following elements are recognized by pile semantic filenames:
 
-- date. Every file name is prefixed with the ISO date to facilitate sorting
+- date. ISO date strings at the beginning of the file-name are recognized as dates (`^\d\d\d\d-\d\d-\d\d `)
+- extension. Extensions like `.pdf` or `.tar.gz` are recognized at the end of the filename (`([.][a-z]{1-4})*$`)
 - tags. The syntax `#<tagname>` to categorize documents with tags.
-- key-value pairs. The syntax `$<key>=value` let's us attach structured information to the document
-- name. A textual description of the document
+- attributes. The syntax `(<key> . <value>)` let's us attach attributes as key-value pairs.
 
-Pile provides the following features to manage documents in this form
+## pile-cli
 
-- Normalize file names by bringing the fields in the right order
-- Query the document pile for tags, key-value pairs or names
-- Parse and export document metadata from filenames as CSV, JSON, sqlitedb
+The pile cli `pile` provides the following features to manage documents from the command line
+
+- Validate existing filenames `pile `
+- List documents with parsed semantic fields. `pile ls`
+- Query the document pile for tags, key-value pairs or names using SQL type queries. `pile select ...`
+- Parse and export document metadata from filenames as CSV, JSON, sqlitedb `pile export ...`
+
+## pile-ui
+
+- Import view, that helps with annotating new documents
+
+- List view with instant-filter and preview
 
 ## Design Goals
 
-- Work with the file system so that finder, dropbox, git, etc. can be used to manage documents
+- Seamless integration with existing tooling.
+  Keep using finder, dropbox, git, etc. to manage your documents.
+
+- Don't duplicate functionality that is covered by established tools. I.e. don't do backups or
+  version control.  We create and manage semantic file names.
+
+- Support File Systems provided by Linux, OSX and Windows. (No use of `\/:`)
+
+- No use of characters that can interfere with command line usage (`&|`). We do allow space
+  characters.
