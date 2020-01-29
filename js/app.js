@@ -86,7 +86,7 @@ function do_preview(rec) {
 
 const EXT_IFRAME = [ ".pdf" ]
 const EXT_IMG  = [ ".png" ]
-const EXT_PRE  = [ ".txt", ".md" ]
+const EXT_PRE  = [ ".txt", ".md", ".sh" ]
 
 var recs = [];
 var crec = false;

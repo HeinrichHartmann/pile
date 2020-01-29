@@ -18,7 +18,7 @@ const TARGETS = [
 
 const EXT_IFRAME = [ ".pdf" ]
 const EXT_IMG  = [ ".png", ".jpeg" ]
-const EXT_PRE  = [ ".txt", ".md" ]
+const EXT_PRE  = [ ".txt", ".md", ".sh" ]
 
 function preview(rec) {
   url = "/pfile/" + encodeURIComponent(rec.filename);

@@ -22,6 +22,9 @@ html {
   height: 100%;
   overflow-x: hidden;
   overflow-y: scroll;
+  /* Use flex-box, so we can fit-in images */
+  display: flex;
+  flex-diration: column;
 }
 
 #right {
@@ -83,7 +86,9 @@ th {
   display: block;
   margin-top: auto;
   margin-bottom: auto;
-  width: 100%;
+  /* Fit image into containing flex-box */
+  object-fit: contain;
+  object-position: top;
 }
 
 #preview_pre {
