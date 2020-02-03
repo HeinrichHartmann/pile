@@ -24,7 +24,7 @@ html {
   overflow-y: scroll;
   /* Use flex-box, so we can fit-in images */
   display: flex;
-  flex-diration: column;
+  flex-direction: column;
 }
 
 #right {

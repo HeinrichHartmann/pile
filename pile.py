@@ -238,7 +238,9 @@ class Stack():
         return list(content)
 
     def is_empty(self):
-        if next(self.backing_dir.iterdir(), None)  == None:
+        content = list(self.backing_dir.iterdir())
+        content = filter(lambda p: not p.name.startswith("."), content)
+        if next(content, None)  == None:
             return True
         return False
 

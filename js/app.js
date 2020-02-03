@@ -112,7 +112,7 @@ function select(n) {
 }
 
 function select_first() {
-  crec = 0;
+  crec = -1;
   select_next();
 }
 
