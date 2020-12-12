@@ -17,9 +17,12 @@ path_docs = Path("~/Documents").expanduser()
 path_pile = Path("~/Pile").expanduser()
 path_log = Path("~/var/log").expanduser()
 
+
 def res(path):
     import pkg_resources
+
     return pkg_resources.resource_filename("pile", path)
+
 
 async def handle_docs(request):
     return web.FileResponse(res("static/docs.html"))
@@ -80,6 +83,7 @@ app.router.add_post("/app/refile", handle_app_refile)
 app.router.add_static("/static", res("static"), show_index=True)
 app.router.add_static("/js", res("static/js"), show_index=True)
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", default=33882, type=int)
@@ -87,6 +91,7 @@ def main():
     args = parser.parse_args()
     if args.daemon:
         import sys
+
         sys.stderr = open(path_log.joinpath("piled.err"), "a")
         sys.stdout = open(path_log.joinpath("piled.out"), "a")
     print(args)

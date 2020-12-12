@@ -11,12 +11,12 @@ import datetime
 # We explicitly include the latter unicode point
 # See, e.g. https://tex.stackexchange.com/questions/94418/os-x-umlauts-in-utf8-nfd-yield-package-inputenc-error-unicode-char-u8̈-not
 
-W = u"[A-Za-z0-9,._\u0308\u006B]"
-RE_YEAR = re.compile(u"\d\d\d\d")
-RE_DATE = re.compile(u"(\d\d\d\d-\d\d-\d\d)(.*)")
-RE_EXT = re.compile(u".*?[.]([a-zA-Z]{1,3})")
-RE_KVTAG = re.compile(u"[#]({w}+)=({w}+)".format(w=W))
-RE_TAG = re.compile(u"[#]{w}+".format(w=W))
+W = "[A-Za-z0-9,._\u0308\u006B]"
+RE_YEAR = re.compile("\d\d\d\d")
+RE_DATE = re.compile("(\d\d\d\d-\d\d-\d\d)(.*)")
+RE_EXT = re.compile(".*?[.]([a-zA-Z]{1,3})")
+RE_KVTAG = re.compile("[#]({w}+)=({w}+)".format(w=W))
+RE_TAG = re.compile("[#]{w}+".format(w=W))
 
 
 def tag2str(tag):
@@ -182,6 +182,7 @@ class Pile:
     @staticmethod
     def from_folder(dirpath, recurse=False):
         pile = Pile(dirpath)
+
         def _rec(dirpath, tags):
             for p in Path(dirpath).iterdir():
                 if recurse and p.is_dir():
