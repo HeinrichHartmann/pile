@@ -14,9 +14,12 @@ path_docs = Path("~/Documents").expanduser()
 path_pile = Path("~/Pile").expanduser()
 path_log = Path("~/var/log").expanduser()
 
+def res(path):
+    import pkg_resources
+    return pkg_resources.resource_filename("pile", path)
 
 async def handle_docs(request):
-    return web.FileResponse("./static/docs.html")
+    return web.FileResponse(res("static/docs.html"))
 
 
 async def handle_dfile(request):
@@ -25,7 +28,7 @@ async def handle_dfile(request):
 
 
 async def handle_pile(request):
-    return web.FileResponse("./static/pile.html")
+    return web.FileResponse(res("static/pile.html"))
 
 
 async def handle_pfile(request):
@@ -71,10 +74,10 @@ app.router.add_get("/app/list", handle_app_list)
 app.router.add_get("/app/last", handle_app_last)
 app.router.add_post("/app/refile", handle_app_refile)
 
-app.router.add_static("/static", "./static", show_index=True)
-app.router.add_static("/js", "./js", show_index=True)
+app.router.add_static("/static", res("static"), show_index=True)
+app.router.add_static("/js", res("static/js"), show_index=True)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", default=33882, type=int)
     parser.add_argument("-d", "--daemon", default=False, action="store_true")
