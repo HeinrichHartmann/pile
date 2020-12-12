@@ -6,6 +6,9 @@ from urllib.parse import unquote
 from pathlib import Path
 import json
 import argparse
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 from pile import Pile, Stack
 
@@ -37,7 +40,7 @@ async def handle_pfile(request):
 
 
 async def handle_app_list(request):
-    pile = Pile.from_folder(path_docs)
+    pile = Pile.from_folder(path_docs, recurse=True)
     return web.json_response(pile.list())
 
 
@@ -84,7 +87,6 @@ def main():
     args = parser.parse_args()
     if args.daemon:
         import sys
-
         sys.stderr = open(path_log.joinpath("piled.err"), "a")
         sys.stdout = open(path_log.joinpath("piled.out"), "a")
     print(args)

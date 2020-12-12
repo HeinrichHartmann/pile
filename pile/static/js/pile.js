@@ -8,7 +8,7 @@ function P(s, t, u) {
 
 
 const TARGETS = [
-  { "name" : "Trash",    "target" : "~/Trash",     "key" : "x" },
+  { "name" : "Trash",    "target" : "/tmp",        "key" : "x" },
   { "name" : "Docs",     "target" : "~/Documents", "key" : "1" },
   { "name" : "Books",    "target" : "~/Books",     "key" : "2" },
   { "name" : "Articles", "target" : "~/Articles",  "key" : "3" },
@@ -18,7 +18,7 @@ const TARGETS = [
 ]
 
 const EXT_IFRAME = [ ".pdf" ]
-const EXT_IMG  = [ ".png", ".jpeg" ]
+const EXT_IMG  = [ ".png", ".jpeg", ".jpg" ]
 const EXT_PRE  = [ ".txt", ".md", ".sh" ]
 
 function preview(rec) {

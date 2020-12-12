@@ -12,6 +12,7 @@ import datetime
 # See, e.g. https://tex.stackexchange.com/questions/94418/os-x-umlauts-in-utf8-nfd-yield-package-inputenc-error-unicode-char-u8̈-not
 
 W = u"[A-Za-z0-9,._\u0308\u006B]"
+RE_YEAR = re.compile(u"\d\d\d\d")
 RE_DATE = re.compile(u"(\d\d\d\d-\d\d-\d\d)(.*)")
 RE_EXT = re.compile(u".*?[.]([a-zA-Z]{1,3})")
 RE_KVTAG = re.compile(u"[#]({w}+)=({w}+)".format(w=W))
@@ -106,7 +107,7 @@ class Document:
         doc = Document.parse_path(path)
 
         if not doc.date:
-            raise ValueError("Date field not found")
+            raise ValueError(f"Date field not found: {path.name}")
         return doc
 
     def inferr_from_path(path):
@@ -158,6 +159,7 @@ class Document:
             self.normalize()
 
     def get_path(self):
+        print(self.path.as_posix())
         return self.path.as_posix()
 
 
@@ -180,17 +182,22 @@ class Pile:
     @staticmethod
     def from_folder(dirpath, recurse=False):
         pile = Pile(dirpath)
-
         def _rec(dirpath, tags):
             for p in Path(dirpath).iterdir():
                 if recurse and p.is_dir():
-                    _rec(p, tags + [p.name])
+                    if RE_YEAR.match(p.name):
+                        _rec(p, tags)
+                    elif RE_TAG.match(p.name):
+                        _rec(p, tags + [p.name])
+                    else:
+                        print(f"Skipping directory {p.name}")
                 else:
                     try:
                         d = Document.create_from_path(p)
                         d.tags += tags
                         pile.add(d)
                     except ValueError as e:
+                        print(e)
                         pass
 
         _rec(dirpath, [])
