@@ -15,20 +15,20 @@ def warn(s):
     sys.stderr.buffer.write((s + '\n').encode("utf-8"))
 
 @click.group()
-def doc():
+def main():
     pass
 
 @click.command(help="List all valid documents in pile")
 def ls():
     for doc in Pile.from_folder("."):
         writeln(doc.name())
-doc.add_command(ls)
+main.add_command(ls)
 
 @click.command(help="show left over documents")
 def lt():
     for p in Pile.leftovers("."):
         writeln(p.name)
-doc.add_command(lt)
+main.add_command(lt)
 
 @click.command()
 def totsv():
@@ -40,7 +40,7 @@ def totsv():
         # Normalize unicode strings before printing in order to keep alignment
         writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
                                 [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
-doc.add_command(totsv)
+main.add_command(totsv)
 
 @click.command()
 def table():
@@ -52,7 +52,7 @@ def table():
         # Normalize unicode strings before printing in order to keep alignment
         writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
                                 [doc.date, tags, kvtags, doc.title, doc.ext[1:]])))
-doc.add_command(table)
+main.add_command(table)
 
 @click.command()
 @click.option("--recurse","-r",help="Descend into subdirectories", is_flag=True)
@@ -71,14 +71,14 @@ def invoice_table(recurse):
         # Normalize unicode strings before printing in order to keep alignment
         writeln(fmt.format(*map(lambda s : unicodedata.normalize('NFC', s),
                                 [doc.date, doc.title, s_tags, amount, cur])))
-doc.add_command(invoice_table)
+main.add_command(invoice_table)
 
 
 @click.command(help="export documents as json")
 def tojson():
     for doc in Pile.from_folder("."):
         writeln(json.dumps(doc.__dict__()))
-doc.add_command(tojson)
+main.add_command(tojson)
 
 @click.command(help="normalize names of all file son the pile")
 @click.option("--dry-run","-n",help="dry run", is_flag=True)
@@ -92,20 +92,20 @@ def normalize(dry_run):
                 write("\n")
         else:
             doc.normalize()
-doc.add_command(normalize)
+main.add_command(normalize)
 
 @click.command(help="List all tags")
 def tags():
     for doc in Pile.from_folder("."):
         for tag in doc.tag_list():
             print(tag)
-doc.add_command(tags)
+main.add_command(tags)
 
 @click.command(help="extract tagged documents into a folder")
 @click.argument('tag')
 def extract(tag):
     Pile.from_folder(".").extract(str2tag(tag))
-doc.add_command(extract)
+main.add_command(extract)
 
 @click.command(help="Tag documents in subfolder with it's name, and move them to the pile.")
 @click.argument('folder')
@@ -115,13 +115,10 @@ def fold(folder):
         doc.tag_add(str2tag(folder))
         doc.move_to_dir("./")
     Path(folder).rmdir() # remove if empty
-doc.add_command(fold)
+main.add_command(fold)
 
 @click.command()
 def latest():
     pile = Pile.from_folder(".")
     print(pile.latest().name())
-doc.add_command(latest)
-
-if __name__ == '__main__':
-    doc()
+main.add_command(latest)

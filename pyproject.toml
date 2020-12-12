@@ -6,8 +6,15 @@ authors = ["Heinrich Hartmann <heinrich@heinrichhartmann.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
+aiohttp = "^3.7.3"
+click = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
+black = "^20.8b1"
+
+[tool.poetry.scripts]
+pile = 'pile.cli:main'
+piled = 'pile.src:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
