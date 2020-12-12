@@ -14,6 +14,7 @@ const TARGETS = [
   { "name" : "Articles", "target" : "~/Articles",  "key" : "3" },
   { "name" : "Tax",      "target" : "~/Tax",       "key" : "4" },
   { "name" : "Pictures", "target" : "~/Pictures",  "key" : "5" },
+  { "name" : "Blogs",    "target" : "~/Blogs",     "key" : "6" },
 ]
 
 const EXT_IFRAME = [ ".pdf" ]
