@@ -11,20 +11,24 @@ import datetime
 # We explicitly include the latter unicode point
 # See, e.g. https://tex.stackexchange.com/questions/94418/os-x-umlauts-in-utf8-nfd-yield-package-inputenc-error-unicode-char-u8̈-not
 
-W = u'[A-Za-z0-9,._\u0308\u006B]'
+W = u"[A-Za-z0-9,._\u0308\u006B]"
 RE_DATE = re.compile(u"(\d\d\d\d-\d\d-\d\d)(.*)")
 RE_EXT = re.compile(u".*?[.]([a-zA-Z]{1,3})")
 RE_KVTAG = re.compile(u"[#]({w}+)=({w}+)".format(w=W))
-RE_TAG = re.compile(u'[#]{w}+'.format(w=W))
+RE_TAG = re.compile(u"[#]{w}+".format(w=W))
+
 
 def tag2str(tag):
-    return '#' + tag
+    return "#" + tag
+
 
 def str2tag(s):
     return s.lstrip("#")
 
+
 def kvtag2str(k, v):
     return "#" + k + "=" + v
+
 
 class Document:
     "A managed document"
@@ -39,18 +43,18 @@ class Document:
 
     def as_dict(self):
         return {
-            "date" : self.date,
-            "tags" : self.tag_list(),
-            "kvtags" : self.kvtags,
-            "title" : self.title,
-            "extension" : self.ext,
-            "filename" : self.path.name,
-            "path" : self.path.resolve().as_posix(),
+            "date": self.date,
+            "tags": self.tag_list(),
+            "kvtags": self.kvtags,
+            "title": self.title,
+            "extension": self.ext,
+            "filename": self.path.name,
+            "path": self.path.resolve().as_posix(),
         }
 
     def update(self, data):
         print("update", self, data)
-        for key in [  "date", "tags", "kvtags", "title", "ext" ]:
+        for key in ["date", "tags", "kvtags", "title", "ext"]:
             if key in data:
                 setattr(self, key, data[key])
 
@@ -109,15 +113,17 @@ class Document:
         "Infer as much information as possible from the file"
         doc = Document.parse_path(path)
         if not doc.date:
-            doc.date = datetime.datetime.fromtimestamp(
-                path.stat().st_ctime
-            ).strftime("%Y-%m-%d")
+            doc.date = datetime.datetime.fromtimestamp(path.stat().st_ctime).strftime(
+                "%Y-%m-%d"
+            )
         return doc
 
     def text(self):
         tags = "".join([tag2str(t) + " " for t in sorted(self.tags)])
-        kvtags = "".join([kvtag2str(k, self.kvtags[k]) + " " for k in sorted(self.kvtags)])
-        return '{} {}{}{}{}'.format(self.date, tags, kvtags, self.title, self.ext)
+        kvtags = "".join(
+            [kvtag2str(k, self.kvtags[k]) + " " for k in sorted(self.kvtags)]
+        )
+        return "{} {}{}{}{}".format(self.date, tags, kvtags, self.title, self.ext)
 
     def normalize(self):
         q = self.path.with_name(self.text())
@@ -154,7 +160,8 @@ class Document:
     def get_path(self):
         return self.path.as_posix()
 
-class Pile():
+
+class Pile:
     "A pile of managed documents"
 
     def __init__(self, backing_dir):
@@ -173,6 +180,7 @@ class Pile():
     @staticmethod
     def from_folder(dirpath, recurse=False):
         pile = Pile(dirpath)
+
         def _rec(dirpath, tags):
             for p in Path(dirpath).iterdir():
                 if recurse and p.is_dir():
@@ -184,6 +192,7 @@ class Pile():
                         pile.add(d)
                     except ValueError as e:
                         pass
+
         _rec(dirpath, [])
         return pile
 
@@ -214,9 +223,10 @@ class Pile():
 
     def list(self):
         self.docs.sort(key=lambda doc: doc.date, reverse=True)
-        return [ doc.as_dict() for doc in  self.docs ]
+        return [doc.as_dict() for doc in self.docs]
 
-class Stack():
+
+class Stack:
     "A stack of not yet managed documents"
 
     def __init__(self, backing_dir):
@@ -228,11 +238,14 @@ class Stack():
         content = filter(lambda p: not p.name.startswith("."), content)
         # sort by creation time
         # https://stackoverflow.com/a/168435/1209380
-        content = [ x[0] for x in sorted(
-            [(fn, os.stat(fn)) for fn in content],
-            reverse=True,
-            key = lambda x: x[1].st_ctime
-        )]
+        content = [
+            x[0]
+            for x in sorted(
+                [(fn, os.stat(fn)) for fn in content],
+                reverse=True,
+                key=lambda x: x[1].st_ctime,
+            )
+        ]
         content = content[:n]
         content = map(Document.inferr_from_path, content)
         return list(content)
@@ -240,7 +253,7 @@ class Stack():
     def is_empty(self):
         content = list(self.backing_dir.iterdir())
         content = filter(lambda p: not p.name.startswith("."), content)
-        if next(content, None)  == None:
+        if next(content, None) == None:
             return True
         return False
 

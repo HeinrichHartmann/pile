@@ -14,23 +14,29 @@ path_docs = Path("~/Documents").expanduser()
 path_pile = Path("~/Pile").expanduser()
 path_log = Path("~/var/log").expanduser()
 
+
 async def handle_docs(request):
     return web.FileResponse("./static/docs.html")
 
+
 async def handle_dfile(request):
-    name = unquote(request.match_info.get('name', ""))
+    name = unquote(request.match_info.get("name", ""))
     return web.FileResponse(path_docs.joinpath(name))
+
 
 async def handle_pile(request):
     return web.FileResponse("./static/pile.html")
 
+
 async def handle_pfile(request):
-    name = unquote(request.match_info.get('name', ""))
+    name = unquote(request.match_info.get("name", ""))
     return web.FileResponse(path_pile.joinpath(name))
+
 
 async def handle_app_list(request):
     pile = Pile.from_folder(path_docs)
     return web.json_response(pile.list())
+
 
 async def handle_app_last(request):
     stack = Stack(path_pile)
@@ -39,19 +45,21 @@ async def handle_app_last(request):
     else:
         return web.json_response(stack.last().as_dict())
 
+
 async def handle_app_refile(request):
     data = await request.json()
-    source_filename = data['source']
-    target = data['target']
-    meta = data['meta']
+    source_filename = data["source"]
+    target = data["target"]
+    meta = data["meta"]
     stack = Stack(path_pile)
-    assert(not stack.is_empty())
+    assert not stack.is_empty()
     doc = stack.last()
-    assert(doc.name() == source_filename)
+    assert doc.name() == source_filename
     doc.update(meta)
     doc.normalize()
     doc.move_to_dir(target)
-    return web.json_response({ "path" : doc.get_path() })
+    return web.json_response({"path": doc.get_path()})
+
 
 app.router.add_get("/", handle_docs)
 app.router.add_get("/dfile/{name}", handle_dfile)
@@ -66,15 +74,16 @@ app.router.add_post("/app/refile", handle_app_refile)
 app.router.add_static("/static", "./static", show_index=True)
 app.router.add_static("/js", "./js", show_index=True)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--port', default=33882, type=int)
-    parser.add_argument('-d', '--daemon', default=False, action="store_true")
+    parser.add_argument("-p", "--port", default=33882, type=int)
+    parser.add_argument("-d", "--daemon", default=False, action="store_true")
     args = parser.parse_args()
     if args.daemon:
         import sys
-        sys.stderr = open(path_log.joinpath('piled.err'), 'a')
-        sys.stdout = open(path_log.joinpath('piled.out'), 'a')
+
+        sys.stderr = open(path_log.joinpath("piled.err"), "a")
+        sys.stdout = open(path_log.joinpath("piled.out"), "a")
     print(args)
     print(path_docs, path_pile)
-    web.run_app(app, port = args.port)
+    web.run_app(app, port=args.port)
