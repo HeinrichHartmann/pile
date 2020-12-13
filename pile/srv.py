@@ -8,15 +8,16 @@ import json
 import argparse
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 from pile import Pile, Stack
 
-app = web.Application()
-path_docs = Path("~/Documents").expanduser()
-path_pile = Path("~/Pile").expanduser()
-path_log = Path("~/var/log").expanduser()
+logging.basicConfig(level=logging.DEBUG)
 
+# TODO: Consistent naming
+# Pile = sorted documents (was ~/Documents)
+# Stack = unsorted documents Stack -> Pile
+path_docs = Path("/var/pile/pile").expanduser()
+path_pile = Path("/var/pile/stack").expanduser()
+path_log = Path("/var/pile/log").expanduser()
 
 def res(path):
     import pkg_resources
@@ -70,19 +71,6 @@ async def handle_app_refile(request):
     return web.json_response({"path": doc.get_path()})
 
 
-app.router.add_get("/", handle_docs)
-app.router.add_get("/dfile/{name}", handle_dfile)
-
-app.router.add_get("/pile", handle_pile)
-app.router.add_get("/pfile/{name}", handle_pfile)
-
-app.router.add_get("/app/list", handle_app_list)
-app.router.add_get("/app/last", handle_app_last)
-app.router.add_post("/app/refile", handle_app_refile)
-
-app.router.add_static("/static", res("static"), show_index=True)
-app.router.add_static("/js", res("static/js"), show_index=True)
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -90,10 +78,24 @@ def main():
     parser.add_argument("-d", "--daemon", default=False, action="store_true")
     args = parser.parse_args()
     if args.daemon:
+        # HACK
         import sys
-
         sys.stderr = open(path_log.joinpath("piled.err"), "a")
         sys.stdout = open(path_log.joinpath("piled.out"), "a")
-    print(args)
-    print(path_docs, path_pile)
+    print("Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
+
+    app = web.Application()
+    app.router.add_get("/", handle_docs)
+    app.router.add_get("/dfile/{name}", handle_dfile)
+
+    app.router.add_get("/pile", handle_pile)
+    app.router.add_get("/pfile/{name}", handle_pfile)
+
+    app.router.add_get("/app/list", handle_app_list)
+    app.router.add_get("/app/last", handle_app_last)
+    app.router.add_post("/app/refile", handle_app_refile)
+
+    app.router.add_static("/static", res("static"), show_index=True)
+    app.router.add_static("/js", res("static/js"), show_index=True)
+
     web.run_app(app, port=args.port)
