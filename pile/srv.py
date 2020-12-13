@@ -82,7 +82,7 @@ def main():
         import sys
         sys.stderr = open(path_log.joinpath("piled.err"), "a")
         sys.stdout = open(path_log.joinpath("piled.out"), "a")
-    print("Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
+    print(f"Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
 
     app = web.Application()
     app.router.add_get("/", handle_docs)

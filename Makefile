@@ -1,31 +1,24 @@
-PWD=$(shell pwd)
-PYTHON=source venv/bin/activate; PYTHONPATH=$(PWD) python
+CNAME=docker.heinrichhartmann.net:5000/pile
 
 run:
-	$(PYTHON) bin/piled -p 33883
+	poetry install
+	poetry run python -c 'from pile import src; srv.main()'
 
-venv:
-	$(PYTHON) -m pip install --upgrade pip setuptools wheel
-	$(PYTHON) -m pip install -r requirements.txt
-	$(PYTHON) setup.py install
-
-install:
-	python3 setup.py install
-
-lint:
-	pylint pile.py
-
-test: install
-	bash test.sh
-
-demo: install
-	cd ~/Documents && pile table
-
-demo-cgi: install
-	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=env' | jq .
-	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=args&hello=1&world=2' | jq .
-	curl -s 'http://localhost:8888/Documents/pile.cgi?ACTION=list' | jq .
-	curl -s 'http://localhost:8888/Stack/.pile.cgi?ACTION=stack&n=3' | jq .
+dist:
+	poetry build
 
 clean:
-	rm -r pile.egg-info dist build
+	rm -r dist
+
+install: dist
+	cd dist; pip install *.whl
+
+test:
+	poetry run bash test.sh
+
+image: dist
+	docker build . --tag ${CNAME}
+	docker tag  ${CNAME} pile
+
+push:
+	docker push ${CNAME}
