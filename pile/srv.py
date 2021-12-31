@@ -15,9 +15,10 @@ logging.basicConfig(level=logging.DEBUG)
 # TODO: Consistent naming
 # Pile = sorted documents (was ~/Documents)
 # Stack = unsorted documents Stack -> Pile
-path_docs = Path("/var/pile/pile").expanduser()
-path_pile = Path("/var/pile/stack").expanduser()
-path_log = Path("/var/pile/log").expanduser()
+path_docs = Path("/pile/pile").expanduser()
+path_pile = Path("/pile/stack").expanduser()
+path_log = Path("/pile/log").expanduser()
+
 
 def res(path):
     import pkg_resources
@@ -71,17 +72,10 @@ async def handle_app_refile(request):
     return web.json_response({"path": doc.get_path()})
 
 
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", default=33882, type=int)
-    parser.add_argument("-d", "--daemon", default=False, action="store_true")
+    parser.add_argument("-p", "--port", default=8080, type=int)
     args = parser.parse_args()
-    if args.daemon:
-        # HACK
-        import sys
-        sys.stderr = open(path_log.joinpath("piled.err"), "a")
-        sys.stdout = open(path_log.joinpath("piled.out"), "a")
     print(f"Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
 
     app = web.Application()
