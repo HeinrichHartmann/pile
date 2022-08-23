@@ -137,7 +137,6 @@ function select_prev() {
 }
 
 function ping() {
-  P("ping!");
   $("#table th").toggleClass("ping", true);
   setTimeout(() => {
     $("#table th").toggleClass("ping", false);
@@ -223,16 +222,15 @@ function main() {
       ]
       recs.push(rec);
     });
-
     select_first();
-
     update_table();
-
   });
 
-  $('#filter').keyup((event) => {
-    P(event);
-    filter(event);
+  $('#filter').keyup((e) => {
+    if(e.code == "Escape") {
+      return document.activeElement.blur();
+    }
+    filter(e);
     select_first();
     event.currentTarget.focus();
     update_table();
@@ -240,6 +238,8 @@ function main() {
 
   var f_toggle = true;
   $(document).keydown(function(e){
+    if(document.activeElement.getAttribute("id") == "filter") { return; }
+    if(e.code == "Enter") { return $("#filter").focus();  }
     if(e.key == 'f') {
       if(f_toggle) {
         $('#left').width("0%");
