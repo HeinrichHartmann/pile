@@ -29,7 +29,7 @@ function setClipboard(value) {
 
 function download() {
   var link = document.createElement("a");
-  cname = recs[crec].filename;
+  cname = recs[crec].path;
   path = "/dfile/" + encodeURIComponent(cname);
   link.download = cname;
   link.href = path;
@@ -43,11 +43,11 @@ function preview(rec) {
   }
   preview_job = setTimeout(() => {
     do_preview(rec);
-  }, 100);
+  }, 500);
 }
 
 function do_preview(rec) {
-  url = "/dfile/" + encodeURIComponent(rec.filename);
+  url = "/dfile/" + encodeURIComponent(rec.path);
   if ( EXT_IFRAME.includes(rec.extension) ) {
     $("#no_preview").css("display", "none");
     $("#preview_img").css("display", "none");
@@ -236,20 +236,26 @@ function main() {
     update_table();
   });
 
-  var f_toggle = true;
+  var f_toggle = 0;
   $(document).keydown(function(e){
     if(document.activeElement.getAttribute("id") == "filter") { return; }
     if(e.code == "Enter") { return $("#filter").focus();  }
     if(e.key == 'f') {
-      if(f_toggle) {
-        $('#left').width("0%");
-        $('#right').width("100%");
-      } else {
-        $('#left').width("50%");
-        $('#right').width("50%");
+      if(f_toggle == 0) {
+        $('#left').hide();
+        $('#left').css({'width': '0%'});
+        $('#right').css({'width': '100%'});
+      } else if (f_toggle == 1) {
+        $('#left').show();
+        $('#right').hide();
+        $('#left').css({'width': '100%'});
+        $('#right').css({'width': '0%'});
+      } else if (f_toggle == 2) {
+        $('#right').show();
+        $('#left').css({'width': '50%'});
+        $('#right').css({'width': '50%'});
       }
-      f_toggle = ! f_toggle;
-      console.log("toggle fullscreen");
+      f_toggle = (f_toggle + 1) % 3
     }
     if(e.key == 'n' || e.key == "j") {
       select_next();

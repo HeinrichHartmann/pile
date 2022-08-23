@@ -182,7 +182,6 @@ class Pile:
     @staticmethod
     def from_folder(dirpath, recurse=False):
         pile = Pile(dirpath)
-
         def _rec(dirpath, tags):
             for p in Path(dirpath).iterdir():
                 if recurse and p.is_dir():
@@ -231,8 +230,11 @@ class Pile:
 
     def list(self):
         self.docs.sort(key=lambda doc: doc.date, reverse=True)
-        return [doc.as_dict() for doc in self.docs]
-
+        def _render(doc):
+            out = doc.as_dict()
+            out["path"] = doc.path.relative_to(self.backing_dir).as_posix()
+            return out
+        return [ _render(doc) for doc in self.docs ]
 
 class Stack:
     "A stack of not yet managed documents"
