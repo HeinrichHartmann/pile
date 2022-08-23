@@ -11,6 +11,7 @@
         pkgs.coreutils
         pkgs.poetry
         pkgs.jq
+        pkgs.bindfs
       ]; };
     };
 }

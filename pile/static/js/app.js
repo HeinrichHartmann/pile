@@ -99,7 +99,7 @@ function select(n) {
 
   P("select", n, rec)
 
-  if (rec.dom_element) {
+  if (rec.dom_element && rec.dom_element.scrollIntoViewIfNeeded) {
     rec.dom_element.scrollIntoViewIfNeeded({block: "start", inline: "nearest"});
   }
 
@@ -230,17 +230,17 @@ function main() {
 
   });
 
-  $('#filter').keyup(
-    (event) => {
-      filter(event);
-      select_first();
-      event.currentTarget.focus();
-      update_table();
-    });
+  $('#filter').keyup((event) => {
+    P(event);
+    filter(event);
+    select_first();
+    event.currentTarget.focus();
+    update_table();
+  });
 
   var f_toggle = true;
   $(document).keydown(function(e){
-    if(e.ctrlKey && e.key == 'f') {
+    if(e.key == 'f') {
       if(f_toggle) {
         $('#left').width("0%");
         $('#right').width("100%");
@@ -251,17 +251,16 @@ function main() {
       f_toggle = ! f_toggle;
       console.log("toggle fullscreen");
     }
-    if(e.ctrlKey && e.key == 'n') {
+    if(e.key == 'n' || e.key == "j") {
       select_next();
     }
-    if(e.ctrlKey && e.key == 'p') {
+    if(e.key == 'p' || e.key == "k") {
       select_prev();
     }
-    if(e.ctrlKey && e.key == 'x') {
+    if(e.key == 'x') {
       download();
     }
   });
-
 };
 
 $(document).ready(main)

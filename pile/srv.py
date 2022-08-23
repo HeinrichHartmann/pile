@@ -15,10 +15,8 @@ logging.basicConfig(level=logging.DEBUG)
 # TODO: Consistent naming
 # Pile = sorted documents (was ~/Documents)
 # Stack = unsorted documents Stack -> Pile
-path_docs = Path("/pile/pile").expanduser()
-path_pile = Path("/pile/stack").expanduser()
-path_log = Path("/pile/log").expanduser()
-
+path_docs = Path("./data/pile").expanduser()
+path_pile = Path("./data/stack").expanduser()
 
 def res(path):
     import pkg_resources
