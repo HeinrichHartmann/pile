@@ -2,3 +2,4 @@ build/
 dist/
 pyenv/
 venv/
+/data/
