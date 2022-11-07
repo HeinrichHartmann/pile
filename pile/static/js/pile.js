@@ -1,20 +1,55 @@
+var cfilename = false;
+
 //
 // Debug Helper
 //
-
 function P(s, t, u) {
   console.log(s, t, u);
 }
 
+function do_punt() {
+    $.ajax({
+      url: '/app/punt',
+      type: 'POST',
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json'
+    }).done(function(d) {
+      $("#log").text(`PUNT!`);
+      update();
+    }).fail(function(d) {
+      console.log(d);
+      $("#log").text(`PUNT FAILED!`);
+    });
+}
+
+function do_refile(cfilename, ctarget) {
+  payload = {
+    "source" : cfilename,
+    "target" : ctarget,
+    "meta"   : {
+      'date' : $("#f_date").val(),
+      'tags' : $("#f_tags").val().split(/[ ]+/).filter(s => (s != "")),
+      'title' : $("#f_title").val(),
+    }
+  }
+  $.ajax({
+    url: '/app/refile',
+    type: 'POST',
+    data: JSON.stringify(payload),
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json'
+  }).done(function(d) {
+    $("#log").text(`Wrote ${ d.path }`);
+    update();
+  }).fail(function() {
+    alert("failed!");
+  });
+}
 
 const TARGETS = [
-  { "name" : "Trash",    "target" : "/tmp",        "key" : "x" },
-  { "name" : "Docs",     "target" : "~/Documents", "key" : "1" },
-  { "name" : "Books",    "target" : "~/Books",     "key" : "2" },
-  { "name" : "Articles", "target" : "~/Articles",  "key" : "3" },
-  { "name" : "Tax",      "target" : "~/Tax",       "key" : "4" },
-  { "name" : "Pictures", "target" : "~/Pictures",  "key" : "5" },
-  { "name" : "Blogs",    "target" : "~/Blogs",     "key" : "6" },
+  { "name" : "Trash",     "target" : "/tmp",        "key" : "x" },
+  { "name" : "Archive",   "target" : "./data/pile", "key" : "a" },
+  { "name" : "Punt",      "action" : do_punt, "key" : "p" },
 ]
 
 const EXT_IFRAME = [ ".pdf" ]
@@ -59,9 +94,6 @@ function preview(rec) {
 //
 // Data Join
 //
-ctarget = false;
-cfilename = false;
-
 function update() {
   $.get("/app/last", (rec, status) => {
     preview(rec);
@@ -77,9 +109,15 @@ function update() {
   })
 }
 
-
-function main() {
+function do_skip() {
+  skip++;
   update()
+}
+
+
+var ctarget = false;
+function main() {
+  let cfilename = update()
 
   d3.select("#f_targets")
     .selectAll("input")
@@ -89,39 +127,18 @@ function main() {
     .classed("target_button", true)
     .attr("type", "submit")
     .attr("value", function(d, i) { return `(${d.key})  ${d.name}` })
-    .on("click", function(d,i) { ctarget = d.target })
+    .on("click", function(d,i) { do_refile(cfilename, d.target); })
     .each(function(d) { d.input = this })
 
   $("#form").submit(function( event ) {
-    payload = {
-      "source" : cfilename,
-      "target" : ctarget,
-      "meta"   : {
-        'date' : $("#f_date").val(),
-        'tags' : $("#f_tags").val().split(/[ ]+/).filter(s => (s != "")),
-        'title' : $("#f_title").val(),
-      }
-    }
-    $.ajax({
-      url: '/app/refile',
-      type: 'POST',
-      data: JSON.stringify(payload),
-      contentType: 'application/json; charset=utf-8',
-      dataType: 'json'
-    }).done(function(d) {
-      $("#log").text(`Wrote ${ d.path }`);
-      update();
-    }).fail(function() {
-      alert("failed!");
-    });
-
     event.preventDefault();
   });
 
   $(document).keydown(function(e) {
+    if(e.code == "Escape") { do_skip() }
+    if(e.key == "p") { do_punt() }
     TARGETS.forEach((target) => {
-      if(e.ctrlKey && e.key == target.key) {
-        // simulate click event
+      if(e.key == target.key) {
         target.input.click()
       }
     })

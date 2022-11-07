@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 path_docs = Path("./data/pile").expanduser()
 path_pile = Path("./data/stack").expanduser()
 
+
 def res(path):
     import pkg_resources
 
@@ -55,6 +56,12 @@ async def handle_app_last(request):
         return web.json_response(stack.last().as_dict())
 
 
+async def handle_app_punt(request):
+    stack = Stack(path_pile)
+    fn = stack.last().punt()
+    return web.json_response({"operation": "punt", "name": fn})
+
+
 async def handle_app_refile(request):
     data = await request.json()
     source_filename = data["source"]
@@ -74,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", default=8080, type=int)
     args = parser.parse_args()
-    print(f"Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
+    logging.info(f"Started piled with {args}\nPile@{path_docs}\nStack@{path_pile}")
 
     app = web.Application()
     app.router.add_get("/", handle_docs)
@@ -85,6 +92,7 @@ def main():
 
     app.router.add_get("/app/list", handle_app_list)
     app.router.add_get("/app/last", handle_app_last)
+    app.router.add_post("/app/punt", handle_app_punt)
     app.router.add_post("/app/refile", handle_app_refile)
 
     app.router.add_static("/static", res("static"), show_index=True)

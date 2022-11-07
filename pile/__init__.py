@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 import os.path
 import datetime
+import shutil
 
 # MacOSX insists in filenames being utf8, with NFD normalized
 # This means umlauts are represented as two unicode points : (1) LATIN SMALL LETTER ? (2) WITH COMBINING DIAERESIS
@@ -29,6 +30,15 @@ def str2tag(s):
 
 def kvtag2str(k, v):
     return "#" + k + "=" + v
+
+
+def _move(src: Path, tar: Path):
+    """Move file past device boundaries"""
+    try:
+        src.rename(tar)
+    except OSError:
+        shutil.copy(src, tar)
+        src.unlink()
 
 
 class Document:
@@ -133,7 +143,7 @@ class Document:
 
     def move_to_dir(self, target):
         q = Path(target).expanduser() / self.path.name
-        self.path.rename(q)
+        _move(self.path, q)
         self.path = q
 
     def name(self):
@@ -162,6 +172,18 @@ class Document:
         print(self.path.as_posix())
         return self.path.as_posix()
 
+    def punt(self):
+        """
+        Kicks a dockument back to the end of the Pile.
+
+        Hack: As Pile is ordered by mtime, we achieve this by modifying the mtime to -1 year
+        """
+        stat = self.path.stat()
+        print("PUNT atime, mtime = ", stat.st_atime, stat.st_mtime)
+        delta = 60 * 60 * 24 * 365  # on year
+        os.utime(self.path.as_posix(), (stat.st_atime - delta, stat.st_mtime - delta))
+        return self.get_path()
+
 
 class Pile:
     "A pile of managed documents"
@@ -182,6 +204,7 @@ class Pile:
     @staticmethod
     def from_folder(dirpath, recurse=False):
         pile = Pile(dirpath)
+
         def _rec(dirpath, tags):
             for p in Path(dirpath).iterdir():
                 if recurse and p.is_dir():
@@ -230,11 +253,14 @@ class Pile:
 
     def list(self):
         self.docs.sort(key=lambda doc: doc.date, reverse=True)
+
         def _render(doc):
             out = doc.as_dict()
             out["path"] = doc.path.relative_to(self.backing_dir).as_posix()
             return out
-        return [ _render(doc) for doc in self.docs ]
+
+        return [_render(doc) for doc in self.docs]
+
 
 class Stack:
     "A stack of not yet managed documents"
@@ -253,7 +279,7 @@ class Stack:
             for x in sorted(
                 [(fn, os.stat(fn)) for fn in content],
                 reverse=True,
-                key=lambda x: x[1].st_ctime,
+                key=lambda x: x[1].st_mtime,
             )
         ]
         content = content[:n]
